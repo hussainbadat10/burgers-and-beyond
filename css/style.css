@@ -103,6 +103,17 @@ p {
   color: var(--color-dark);
 }
 
+.btn-outline-dark {
+  background: transparent;
+  color: var(--color-dark);
+  border-color: var(--color-dark);
+}
+
+.btn-outline-dark:hover {
+  background: var(--color-dark);
+  color: var(--color-white);
+}
+
 .btn-block {
   display: block;
   width: 100%;
