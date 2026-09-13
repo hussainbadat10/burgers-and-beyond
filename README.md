@@ -37,7 +37,7 @@ No build tools needed. Either:
 ## Real business details (live)
 
 - **Phone**: 082 514 0077 and 082 421 1750 (both listed everywhere a phone number appears — nav, hero, footer, contact page)
-- **Address**: 80 Main Reef Road, Randfontein
+- **Address**: 80 Main Reef Rd, Randfontein, 1760 (Google Maps link: https://maps.app.goo.gl/YxGaBvXBSbbE6kD96)
 - **Email**: Burgersnbeyondsa@gmail.com
 - **Opening hours**: Mon–Sat 10:00–18:30, closed Fridays 12:20–13:20, closed Sundays
 
