@@ -196,6 +196,16 @@ p {
   padding: 10px 22px;
 }
 
+.nav-phone-group {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-phone-group .btn {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+}
+
 @media (max-width: 800px) {
   .nav-toggle {
     display: flex;
@@ -233,6 +243,16 @@ p {
   .nav-links .btn {
     margin: 12px 24px;
     width: calc(100% - 48px);
+  }
+
+  .nav-phone-group {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav-phone-group .btn {
+    padding: 10px 22px;
+    font-size: 0.95rem;
   }
 }
 

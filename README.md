@@ -8,7 +8,7 @@ Static marketing website for Burgers N Beyond, a takeaway burger restaurant. Pla
 
 ```
 index.html      Home page
-menu.html       Full menu (burgers, sides, drinks/shakes)
+menu.html       Full menu, collapsible by category
 about.html      Restaurant story
 contact.html    Phone, address, hours, map
 css/style.css   Shared styles
@@ -34,15 +34,17 @@ No build tools needed. Either:
   python3 -m http.server 8000
   ```
 
-## Before going live for real — replace placeholder content
+## Real business details (live)
 
-- **Phone number**: `011 123 4567` / `tel:+27111234567` (appears in the nav, footer, home, and contact pages)
-- **Address**: `123 Example Street, Sandton, Johannesburg, 2196` (footer, contact page, home page info strip)
-- **Email**: `hello@burgersnbeyond.co.za`
-- **Opening hours**: currently Mon–Sat 11:00–21:00, Sun 12:00–20:00
-- **Map**: `contact.html`'s embedded Google Map currently searches `"Sandton, Johannesburg"` — swap the `q=` query param for the real address once confirmed
+- **Phone**: 082 514 0077 and 082 421 1750 (both listed everywhere a phone number appears — nav, hero, footer, contact page)
+- **Address**: 80 Main Reef Road, Randfontein
+- **Email**: Burgersnbeyondsa@gmail.com
+- **Opening hours**: Mon–Sat 10:00–18:30, closed Fridays 12:20–13:20, closed Sundays
+
+## Still placeholder — replace before going live for real
+
 - **Social links**: Facebook/Instagram/WhatsApp icons on the contact page are placeholder `#` links
-- **Menu items & prices**: `menu.html` has a starter menu (6 burgers, 4 sides, 4 drinks/shakes) — adjust to match the real menu
+- **Menu items & prices**: the full real menu is in `menu.html` (transcribed from the physical menu boards) — double-check it against the current boards if they've changed since
 - **Photos**: the site currently uses food emoji as visual accents instead of photography. Drop real photos into `images/` and swap them into the hero/menu/about sections when available.
 - **Logo**: see "Brand" above.
 
