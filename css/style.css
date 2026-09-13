@@ -958,6 +958,24 @@ section {
   color: var(--color-dark);
 }
 
+.cart-eft-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  background: var(--color-dark);
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border-radius: var(--radius);
+  text-align: center;
+}
+
 .cart-order-actions {
   display: flex;
   flex-direction: column;

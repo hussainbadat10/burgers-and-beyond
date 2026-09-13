@@ -89,6 +89,7 @@
       "Hi Burgers N Beyond! I'd like to place an order:\n\n" +
       lines.join('\n') +
       '\n\nTotal: R' + total() +
+      '\n\nEFT confirms order! Please send banking details.' +
       '\n\n(Sent via the website order form)'
     );
   }
