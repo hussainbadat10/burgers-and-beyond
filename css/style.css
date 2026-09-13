@@ -712,11 +712,13 @@ section {
   justify-content: center;
   text-decoration: none;
   font-size: 1.2rem;
-  transition: background 0.15s ease;
+  color: var(--color-dark);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .social-row a:hover {
   background: var(--color-accent);
+  color: var(--color-white);
 }
 
 /* ---------- Footer ---------- */
