@@ -142,13 +142,35 @@ p {
 .halaal-badge {
   background: var(--color-primary);
   color: var(--color-dark);
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   padding: 6px 16px;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+.halaal-badge-logo {
+  height: 38px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.halaal-card-logo {
+  height: 72px;
+  width: auto;
+  margin: 0 auto 16px;
+}
+
+.footer-halaal-logo {
+  height: 26px;
+  width: auto;
+  vertical-align: middle;
+  margin-right: 6px;
 }
 
 .arabic-text {
