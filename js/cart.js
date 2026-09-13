@@ -100,7 +100,7 @@
     var count = itemCount();
 
     if (badge) badge.textContent = count;
-    if (fab) fab.hidden = count === 0 && !fab.dataset.everUsed;
+    if (fab) fab.hidden = count === 0;
 
     var body = document.querySelector('.cart-panel-body');
     var footer = document.querySelector('.cart-panel-footer');
@@ -154,8 +154,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    var fab = document.querySelector('.cart-fab');
-    if (fab && itemCount() > 0) fab.dataset.everUsed = 'true';
     render();
 
     // Add-to-order buttons (menu page only)
@@ -165,12 +163,6 @@
         var name = addBtn.dataset.name;
         var price = parseInt(addBtn.dataset.price, 10);
         addItem(name, price);
-
-        var fabEl = document.querySelector('.cart-fab');
-        if (fabEl) {
-          fabEl.hidden = false;
-          fabEl.dataset.everUsed = 'true';
-        }
 
         var originalText = addBtn.textContent;
         addBtn.classList.add('added');
@@ -219,6 +211,8 @@
         var phone = waBtn.dataset.phone;
         var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(buildOrderText());
         window.open(url, '_blank', 'noopener');
+        clearCart();
+        closePanel();
       }
     });
   });
