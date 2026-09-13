@@ -1,22 +1,23 @@
 /* ============================================
-   Burgers & Beyond — shared stylesheet
+   Burgers N Beyond — shared stylesheet
    ============================================ */
 
 :root {
-  --color-bg: #fff8f0;
-  --color-bg-alt: #fff1e0;
-  --color-dark: #241813;
-  --color-dark-alt: #362520;
-  --color-primary: #e0521f;
-  --color-primary-dark: #b93f14;
-  --color-accent: #f4b73f;
-  --color-text: #2b201b;
-  --color-text-muted: #6b5a52;
+  --color-bg: #f6f5f2;
+  --color-bg-alt: #ece9e3;
+  --color-dark: #141414;
+  --color-dark-alt: #232323;
+  --color-primary: #ffd400;
+  --color-primary-dark: #e0b800;
+  --color-accent: #2f8fe0;
+  --color-text: #1a1a1a;
+  --color-text-muted: #5c5a55;
   --color-white: #ffffff;
   --radius: 14px;
-  --shadow: 0 10px 30px rgba(36, 24, 19, 0.12);
+  --shadow: 0 10px 30px rgba(20, 20, 20, 0.12);
   --max-width: 1120px;
-  --font-heading: 'Oswald', 'Arial Narrow', sans-serif;
+  --font-display: 'Luckiest Guy', 'Baloo 2', cursive;
+  --font-heading: 'Baloo 2', 'Arial Rounded MT Bold', sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
@@ -48,6 +49,7 @@ a {
 
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   line-height: 1.15;
@@ -69,6 +71,7 @@ p {
   padding: 14px 30px;
   border-radius: 999px;
   font-family: var(--font-heading);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-size: 0.95rem;
@@ -80,8 +83,8 @@ p {
 
 .btn-primary {
   background: var(--color-primary);
-  color: var(--color-white);
-  box-shadow: 0 8px 20px rgba(224, 82, 31, 0.35);
+  color: var(--color-dark);
+  box-shadow: 0 8px 20px rgba(255, 212, 0, 0.35);
 }
 
 .btn-primary:hover {
@@ -126,15 +129,19 @@ p {
 }
 
 .nav-logo {
-  font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
   text-decoration: none;
   color: var(--color-white);
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-logo img {
+  height: 40px;
+  width: auto;
 }
 
 .nav-logo span {
@@ -171,6 +178,7 @@ p {
   text-decoration: none;
   color: var(--color-white);
   font-family: var(--font-heading);
+  font-weight: 600;
   text-transform: uppercase;
   font-size: 0.9rem;
   letter-spacing: 0.5px;
@@ -181,7 +189,7 @@ p {
 .nav-links a:hover,
 .nav-links a.active {
   opacity: 1;
-  color: var(--color-accent);
+  color: var(--color-primary);
 }
 
 .nav-links .btn {
@@ -232,8 +240,8 @@ p {
 
 .hero {
   background:
-    radial-gradient(circle at 15% 20%, rgba(244, 183, 63, 0.25), transparent 45%),
-    radial-gradient(circle at 85% 80%, rgba(224, 82, 31, 0.35), transparent 50%),
+    radial-gradient(circle at 15% 20%, rgba(255, 212, 0, 0.18), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(47, 143, 224, 0.25), transparent 50%),
     linear-gradient(135deg, var(--color-dark) 0%, var(--color-dark-alt) 100%);
   color: var(--color-white);
   padding: 100px 24px 90px;
@@ -243,15 +251,18 @@ p {
 .hero-eyebrow {
   display: inline-block;
   font-family: var(--font-heading);
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
   font-size: 0.85rem;
-  color: var(--color-accent);
+  color: var(--color-primary);
   margin-bottom: 18px;
 }
 
 .hero h1 {
-  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 7vw, 4.6rem);
+  letter-spacing: 1px;
   margin-bottom: 0.3em;
 }
 
@@ -295,10 +306,11 @@ section {
 .section-eyebrow {
   display: block;
   font-family: var(--font-heading);
+  font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
   font-size: 0.8rem;
-  color: var(--color-primary);
+  color: var(--color-accent);
   margin-bottom: 10px;
 }
 
@@ -346,7 +358,7 @@ section {
 /* ---------- Info strip (hours / location / phone) ---------- */
 
 .info-strip {
-  background: var(--color-primary);
+  background: var(--color-dark);
   color: var(--color-white);
 }
 
@@ -359,13 +371,18 @@ section {
 
 .info-grid h4 {
   font-size: 0.85rem;
-  color: var(--color-accent);
+  color: var(--color-primary);
   margin-bottom: 8px;
 }
 
 .info-grid p {
   margin: 0;
   font-size: 1.05rem;
+}
+
+.info-grid a {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
 }
 
 /* ---------- Menu page ---------- */
@@ -415,6 +432,7 @@ section {
 
 .menu-item-name {
   font-family: var(--font-heading);
+  font-weight: 700;
   text-transform: uppercase;
   font-size: 1.05rem;
   color: var(--color-dark);
@@ -429,8 +447,9 @@ section {
 
 .menu-item-price {
   font-family: var(--font-heading);
+  font-weight: 700;
   font-size: 1.1rem;
-  color: var(--color-primary);
+  color: var(--color-accent);
   white-space: nowrap;
 }
 
@@ -513,6 +532,7 @@ section {
 .contact-row strong {
   display: block;
   font-family: var(--font-heading);
+  font-weight: 700;
   text-transform: uppercase;
   font-size: 0.85rem;
   color: var(--color-text-muted);
@@ -589,7 +609,19 @@ section {
 }
 
 .footer-grid a:hover {
-  color: var(--color-accent);
+  color: var(--color-primary);
+}
+
+.footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.footer-logo img {
+  height: 32px;
+  width: auto;
 }
 
 .footer-bottom {
