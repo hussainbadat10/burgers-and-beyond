@@ -519,13 +519,23 @@ async function loadSpecialsEditor() {
   var editor = document.getElementById('specialsEditor');
   var rows = await Promise.all(DAY_KEYS.map(async function (key) {
     var snap = await getDoc(doc(db, 'dailySpecials', key));
-    var data = snap.exists() ? snap.data() : { item: '', promo: '' };
-    return { key: key, item: data.item || '', promo: data.promo || '' };
+    var data = snap.exists() ? snap.data() : { item: '', promo: '', imageUrl: '' };
+    return { key: key, item: data.item || '', promo: data.promo || '', imageUrl: data.imageUrl || '' };
   }));
 
   editor.innerHTML = rows.map(function (r) {
+    var photo = r.imageUrl
+      ? '<img src="' + escapeAttr(r.imageUrl) + '" class="admin-item-photo" alt="">'
+      : '<div class="admin-item-photo"></div>';
+    var fileId = 'special-photo-' + r.key;
+
     return (
-      '<div class="admin-item-row" style="grid-template-columns: 100px 1fr 1fr auto;" data-day="' + r.key + '">' +
+      '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 1fr auto;" data-day="' + r.key + '">' +
+        '<div>' +
+          photo +
+          '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
+          '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
+        '</div>' +
         '<strong>' + DAY_LABELS[r.key] + '</strong>' +
         '<input type="text" data-field="item" value="' + escapeAttr(r.item) + '" placeholder="Item name">' +
         '<input type="text" data-field="promo" value="' + escapeAttr(r.promo) + '" placeholder="e.g. 10% off">' +
@@ -536,6 +546,9 @@ async function loadSpecialsEditor() {
 
   editor.querySelectorAll('[data-action="save-special"]').forEach(function (btn) {
     btn.addEventListener('click', function () { saveSpecial(btn.closest('[data-day]')); });
+  });
+  editor.querySelectorAll('[data-action="upload-special-photo"]').forEach(function (input) {
+    input.addEventListener('change', function () { uploadSpecialPhoto(input); });
   });
 }
 
@@ -550,6 +563,44 @@ async function saveSpecial(row) {
   } catch (err) {
     console.error(err);
     showToast('Could not save — try again');
+  }
+}
+
+async function uploadSpecialPhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var row = input.closest('[data-day]');
+  var day = row.dataset.day;
+
+  showToast('Uploading photo…');
+  try {
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
+    var result = await res.json();
+    var url = result.secure_url;
+
+    await setDoc(doc(db, 'dailySpecials', day), { imageUrl: url }, { merge: true });
+
+    var img = row.querySelector('.admin-item-photo');
+    if (img.tagName === 'IMG') {
+      img.src = url;
+    } else {
+      var newImg = document.createElement('img');
+      newImg.className = 'admin-item-photo';
+      newImg.src = url;
+      img.replaceWith(newImg);
+    }
+    showToast('Photo updated');
+  } catch (err) {
+    console.error(err);
+    showToast('Photo upload failed — try again');
   }
 }
 

@@ -25,6 +25,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     promoStrip.querySelector('.promo-day').textContent = DAY_NAMES[dayIndex] + "'s Special";
     promoStrip.querySelector('.promo-text').textContent = special.item + ' — ' + special.promo;
+
+    var photo = promoStrip.querySelector('.promo-photo');
+    var emoji = promoStrip.querySelector('.promo-emoji');
+    if (special.imageUrl) {
+      photo.src = special.imageUrl;
+      photo.alt = special.item;
+      photo.hidden = false;
+      emoji.hidden = true;
+    }
+
     promoStrip.hidden = false;
   } catch (err) {
     console.error('Failed to load daily special', err);

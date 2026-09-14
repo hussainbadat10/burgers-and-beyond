@@ -214,10 +214,10 @@ export const BUSINESS_INFO = {
 };
 
 export const DAILY_SPECIALS = {
-  monday: { item: 'Classic Smash', promo: '10% off' },
-  tuesday: { item: 'Wors Roll Special', promo: 'R10 off' },
-  wednesday: { item: 'Toasted Cheese', promo: 'Buy 1, get 1 half price' },
-  thursday: { item: '3 Full Wings', promo: 'R10 off' },
-  friday: { item: 'Streetbox 1 — Regular', promo: '10% off' },
-  saturday: { item: 'Hulk Smash', promo: 'R15 off' }
+  monday: { item: 'Classic Smash', promo: '10% off', imageUrl: '' },
+  tuesday: { item: 'Wors Roll Special', promo: 'R10 off', imageUrl: '' },
+  wednesday: { item: 'Toasted Cheese', promo: 'Buy 1, get 1 half price', imageUrl: '' },
+  thursday: { item: '3 Full Wings', promo: 'R10 off', imageUrl: '' },
+  friday: { item: 'Streetbox 1 — Regular', promo: '10% off', imageUrl: '' },
+  saturday: { item: 'Hulk Smash', promo: 'R15 off', imageUrl: '' }
 };

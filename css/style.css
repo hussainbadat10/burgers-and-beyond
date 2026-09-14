@@ -666,6 +666,14 @@ section {
   flex-shrink: 0;
 }
 
+.promo-photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 .promo-day {
   font-family: var(--font-heading);
   font-weight: 700;
