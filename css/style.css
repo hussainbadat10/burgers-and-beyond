@@ -674,6 +674,10 @@ section {
   flex-shrink: 0;
 }
 
+.promo-photo[hidden] {
+  display: none;
+}
+
 .promo-day {
   font-family: var(--font-heading);
   font-weight: 700;
