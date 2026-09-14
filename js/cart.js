@@ -90,6 +90,7 @@
       lines.join('\n') +
       '\n\nTotal: R' + total() +
       '\n\nEFT confirms order! Please send banking details.' +
+      '\nIf payment does not reflect, the order will not be processed.' +
       '\n\n(Sent via the website order form)'
     );
   }
