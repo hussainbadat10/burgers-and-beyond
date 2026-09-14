@@ -1,4 +1,4 @@
-import { db, auth, storage } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import {
   onAuthStateChanged, signInWithEmailAndPassword, signOut
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
@@ -6,10 +6,13 @@ import {
   collection, getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, addDoc,
   query, orderBy, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import {
-  ref, uploadBytes, getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 import { CATEGORIES, ITEMS, SITE_CONTENT, DAILY_SPECIALS } from './seed-data.js';
+
+// Photo uploads go to Cloudinary (free, no card required), not Firebase
+// Storage (which now requires Google's paid Blaze plan). This preset is
+// deliberately an "unsigned" one, meant to be used client-side like this.
+var CLOUDINARY_CLOUD_NAME = 'ys741dda';
+var CLOUDINARY_UPLOAD_PRESET = 'BnB_Menu';
 
 var loginView = document.getElementById('loginView');
 var adminView = document.getElementById('adminView');
@@ -218,10 +221,18 @@ async function uploadItemPhoto(input) {
 
   showToast('Uploading photo…');
   try {
-    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    var storageRef = ref(storage, 'menu-items/' + id + '-' + Date.now() + '.' + ext);
-    await uploadBytes(storageRef, file);
-    var url = await getDownloadURL(storageRef);
+    var formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
+    var result = await res.json();
+    var url = result.secure_url;
+
     await updateDoc(doc(db, 'menuItems', id), { imageUrl: url });
 
     var img = row.querySelector('.admin-item-photo');

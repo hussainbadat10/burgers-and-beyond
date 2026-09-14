@@ -1,11 +1,14 @@
 // Shared Firebase initialization — imported by menu-loader.js, promo.js,
 // site-content.js, and admin.js. This config is the public, client-side
-// Firebase config (safe to expose — access is controlled by Firestore/
-// Storage security rules, not by hiding this object).
+// Firebase config (safe to expose — access is controlled by Firestore
+// security rules, not by hiding this object).
+//
+// Note: photo uploads use Cloudinary (see js/admin.js), not Firebase
+// Storage — Storage now requires Google's paid Blaze plan (a card on
+// file), which this project deliberately avoids.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzUprf42SxmpYCySk6ToqFIAr5F_MfAVM",
@@ -19,4 +22,3 @@ const firebaseConfig = {
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(app);

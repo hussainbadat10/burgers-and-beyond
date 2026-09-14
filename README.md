@@ -1,6 +1,6 @@
 # Burgers N Beyond
 
-Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant. Plain HTML/CSS/JS (no build step) for the pages themselves, with **Firebase** (Firestore + Auth + Storage) powering the menu, daily specials, and some site text so the owner can edit them directly without touching code.
+Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant. Plain HTML/CSS/JS (no build step) for the pages themselves, with **Firebase** (Firestore + Auth) powering the menu, daily specials, and some site text, and **Cloudinary** hosting menu photo uploads — so the owner can edit all of it directly without touching code.
 
 **Live at:** https://hussainbadat10.github.io/burgers-and-beyond/ (deployed via GitHub Pages, auto-updates on every push to `main`)
 
@@ -16,7 +16,7 @@ css/style.css   Shared styles (site + admin)
 js/script.js       Mobile nav toggle + active-link highlighting + scroll-reveal
 js/cart.js         Order cart (localStorage) + WhatsApp checkout
 js/firebase-config.js  Shared Firebase init (client-side config — safe to expose,
-                        access is controlled by Firestore/Storage security rules)
+                        access is controlled by Firestore security rules)
 js/menu-loader.js  Renders the menu page from Firestore (menuCategories + menuItems)
 js/promo.js        Daily special banner, reads today's slot from Firestore
 js/site-content.js Fills [data-content-key] elements from Firestore siteContent/main
@@ -26,19 +26,21 @@ js/admin.js        Admin panel logic (auth, CRUD, photo upload, seeding)
 images/         Logo + real photos go here (see below)
 ```
 
-## Firebase architecture
+## Firebase + Cloudinary architecture
 
-**Project:** `burgers-n-beyond-b15a1` (Firestore + Authentication + Storage, Spark/free plan).
+**Firebase project:** `burgers-n-beyond-b15a1` (Firestore + Authentication, Spark/free plan — deliberately NOT using Firebase Storage, since Google now requires the paid Blaze plan, a card on file, just to enable it).
 
-**Data model:**
+**Cloudinary account:** cloud name `ys741dda`, unsigned upload preset `BnB_Menu` — used only for menu item photo uploads (see `js/admin.js`'s `uploadItemPhoto`). Free tier, no card required. An unsigned preset lets the admin panel upload directly from the browser without exposing any Cloudinary secret.
+
+**Data model (Firestore):**
 - `menuCategories/{categoryId}` — `name`, `emoji`, `note`, `order`, optional `comboCallout` (HTML string) and `dividerBefore` ({eyebrow, title, note} — used once, before "Streetbox Meals", to render the "Sharing Meals" section divider)
-- `menuItems/{itemId}` (auto-id) — `categoryId`, `name`, `price` (number), `description`, `imageUrl`, `order`
+- `menuItems/{itemId}` (auto-id) — `categoryId`, `name`, `price` (number), `description`, `imageUrl` (a Cloudinary URL), `order`
 - `siteContent/main` (single doc) — `heroHeadline`, `heroSub`, `aboutIntro`, `aboutBelieve`, `aboutTakeaway`
 - `dailySpecials/{monday..saturday}` (no `sunday` — shop is closed) — `item`, `promo`
 
-**Security rules** (Firestore + Storage): public read, write requires `request.auth != null`. Since there's only one admin account, that's sufficient — no roles/claims needed. Rules aren't stored in this repo; they're set directly in the Firebase console (Firestore Database → Rules, and Storage → Rules).
+**Security rules** (Firestore only): public read, write requires `request.auth != null`. Since there's only one admin account, that's sufficient — no roles/claims needed. Rules aren't stored in this repo; they're set directly in the Firebase console (Firestore Database → Rules).
 
-**Admin panel** (`/admin.html`, not linked from the public nav): email/password login (Firebase Auth, one account created directly in the Firebase console under Authentication → Users), then three tabs — Menu (edit name/price/description per item, upload a photo, add/delete items), Site Text (the 5 fields above), Daily Specials (one row per weekday). An "Import Starter Data" button appears only when `menuCategories` is empty, so it can't accidentally be re-run over real edits later.
+**Admin panel** (`/admin.html`, not linked from the public nav): email/password login (Firebase Auth, one account created directly in the Firebase console under Authentication → Users), then three tabs — Menu (edit name/price/description per item, upload a photo to Cloudinary, add/delete items), Site Text (the 5 fields above), Daily Specials (one row per weekday). An "Import Starter Data" button appears only when `menuCategories` is empty, so it can't accidentally be re-run over real edits later.
 
 **Public pages:** `menu.html` fetches `menuCategories`+`menuItems` on load and builds the same markup/classes the static version used to hand-author, so `css/style.css` and `js/cart.js` (which listens for `.menu-item-add` clicks via delegation on `document`) work unchanged. `index.html`/`about.html` fetch `siteContent/main` and fill any `[data-content-key]` element, falling back to the page's existing static text if Firestore has no value yet or the fetch fails.
 
@@ -77,7 +79,7 @@ The Firebase-backed pages (menu, admin, and the editable text on home/about) nee
 
 ## Deploying
 
-Already live on GitHub Pages (see top of this file) — push to `main` and it redeploys automatically within a minute or two. The Firebase project itself has no separate deploy step — Firestore/Auth/Storage changes (via the admin panel or the Firebase console) take effect immediately, live.
+Already live on GitHub Pages (see top of this file) — push to `main` and it redeploys automatically within a minute or two. The Firebase project and Cloudinary account have no separate deploy step — changes via the admin panel (or the Firebase/Cloudinary consoles directly) take effect immediately, live.
 
 If you ever want to move the static pages off GitHub Pages:
 
