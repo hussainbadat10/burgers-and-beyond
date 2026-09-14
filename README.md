@@ -43,7 +43,7 @@ No build tools needed. Either:
 
 ## Still placeholder — replace before going live for real
 
-- **Social links**: Facebook/Instagram/WhatsApp icons on the contact page are placeholder `#` links
+- **Daily specials**: `menu.html`'s "Today's Special" banner (`js/promo.js`) shows a different EXAMPLE promotion per day of the week (real menu items, made-up discounts), clearly labeled "Example special — real daily promotions coming soon!" so it can't mislead a real customer. Replace the `SPECIALS` object in `js/promo.js` with the real weekly promotions once decided, and remove the note once they're real.
 - **Menu items & prices**: the full real menu is in `menu.html` (transcribed from the physical menu boards) — double-check it against the current boards if they've changed since
 - **Photos**: the site currently uses food emoji as visual accents instead of photography. Drop real photos into `images/` and swap them into the hero/menu/about sections when available.
 - **Logo**: see "Brand" above.
