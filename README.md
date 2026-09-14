@@ -51,7 +51,7 @@ images/         Logo + real photos go here (see below)
 
 - **Palette**: black (`#141414`), cheese yellow (`#ffd400`), and a blue accent (`#2f8fe0`) taken from the "N" in the logo — yellow appears on dark surfaces (header, footer, hero, buttons), blue appears on light surfaces (eyebrows, prices, hover states).
 - **Type**: 'Luckiest Guy' for the hero headline and nav wordmark (matches the logo's bold sticker-style lettering), 'Baloo 2' for other headings, 'Inter' for body text — all via Google Fonts.
-- **Logo**: not yet dropped in — the nav/footer currently fall back to styled text ("Burgers **N** Beyond"). Add the real logo file to `images/` and wire it into `.nav-logo` / `.footer-logo` in each HTML file (swap the text for an `<img>` tag) plus set it as the favicon.
+- **Logo**: `images/logo.png` is the full circular badge (background removed from the original `images/BNB logo.jpeg`, kept as the source). It's only legible at large sizes, so the nav/footer use `images/icon.png` instead — a square crop of just the burger mark from the same badge, paired with the text wordmark. `images/favicon.png` is the same burger-mark crop, set as the browser tab icon in every page's `<head>`.
 
 ## Running locally
 
@@ -79,8 +79,7 @@ Editing any of the above in the admin panel updates every place it appears, site
 ## Still placeholder — replace once real content is decided
 
 - **Menu items, prices & photos**: seeded from the physical menu boards (see `js/seed-data.js`) with no photos yet — add real food photos per item via the admin panel's "Change photo" upload.
-- **Daily specials**: seeded with example promotions (real items, made-up discounts) — replace via the admin panel's Daily Specials tab once real weekly promotions are decided.
-- **Logo**: see "Brand" above.
+- **Daily specials**: seeded with example promotions (real items, made-up discounts) — replace via the admin panel's Daily Specials tab once real weekly promotions are decided (photos can be added there too now).
 
 ## Deploying
 
