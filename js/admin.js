@@ -6,7 +6,7 @@ import {
   collection, getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, addDoc,
   query, orderBy, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { CATEGORIES, ITEMS, SITE_CONTENT, DAILY_SPECIALS } from './seed-data.js';
+import { CATEGORIES, ITEMS, SITE_CONTENT, BUSINESS_INFO, DAILY_SPECIALS } from './seed-data.js';
 
 // Photo uploads go to Cloudinary (free, no card required), not Firebase
 // Storage (which now requires Google's paid Blaze plan). This preset is
@@ -80,9 +80,42 @@ document.querySelectorAll('.admin-tab').forEach(function (tab) {
 
 // ---------- Load everything ----------
 
+// Safely fills in any siteContent/businessInfo field that doesn't exist yet
+// (e.g. new fields added after the site was first seeded), WITHOUT ever
+// touching a key that's already present — so a real edit is never
+// overwritten by a default, even if the site was seeded before these
+// fields existed. Runs quietly on every login; only writes if needed.
+async function fillMissingContentDefaults() {
+  var [siteSnap, bizSnap] = await Promise.all([
+    getDoc(doc(db, 'siteContent', 'main')),
+    getDoc(doc(db, 'businessInfo', 'main'))
+  ]);
+  var existingSite = siteSnap.exists() ? siteSnap.data() : {};
+  var existingBiz = bizSnap.exists() ? bizSnap.data() : {};
+
+  var missingSite = {};
+  Object.keys(SITE_CONTENT).forEach(function (k) {
+    if (!(k in existingSite)) missingSite[k] = SITE_CONTENT[k];
+  });
+
+  var missingBiz = {};
+  Object.keys(BUSINESS_INFO).forEach(function (k) {
+    if (!(k in existingBiz)) missingBiz[k] = BUSINESS_INFO[k];
+  });
+
+  if (Object.keys(missingSite).length) {
+    await setDoc(doc(db, 'siteContent', 'main'), missingSite, { merge: true });
+  }
+  if (Object.keys(missingBiz).length) {
+    await setDoc(doc(db, 'businessInfo', 'main'), missingBiz, { merge: true });
+  }
+}
+
 async function loadEverything() {
+  await fillMissingContentDefaults();
   await loadMenuEditor();
   await loadContentEditor();
+  await loadBusinessEditor();
   await loadSpecialsEditor();
 }
 
@@ -281,13 +314,105 @@ async function addItem(row) {
 }
 
 // ---------- Site text editor ----------
+// Grouped by page/section, each group saves independently to siteContent/main.
 
-var CONTENT_FIELDS = [
-  { key: 'heroHeadline', label: 'Homepage Headline', type: 'input' },
-  { key: 'heroSub', label: 'Homepage Intro Text', type: 'textarea' },
-  { key: 'aboutIntro', label: 'About Page — Intro Paragraph', type: 'textarea' },
-  { key: 'aboutBelieve', label: 'About Page — "What We Believe" Paragraph', type: 'textarea' },
-  { key: 'aboutTakeaway', label: 'About Page — "Takeaway, Done Right" Paragraph', type: 'textarea' }
+var CONTENT_GROUPS = [
+  {
+    title: 'Home — Hero',
+    fields: [
+      { key: 'heroEyebrow', label: 'Eyebrow', type: 'input' },
+      { key: 'heroHeadline', label: 'Headline', type: 'input' },
+      { key: 'heroSub', label: 'Intro Text', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'Home — Fan Favourites',
+    fields: [
+      { key: 'fanFavHeading', label: 'Section Heading', type: 'input' },
+      { key: 'fanFavSub', label: 'Section Subtext', type: 'textarea' },
+      { key: 'fanFav1Emoji', label: 'Card 1 — Emoji', type: 'input' },
+      { key: 'fanFav1Title', label: 'Card 1 — Title', type: 'input' },
+      { key: 'fanFav1Desc', label: 'Card 1 — Description', type: 'textarea' },
+      { key: 'fanFav2Emoji', label: 'Card 2 — Emoji', type: 'input' },
+      { key: 'fanFav2Title', label: 'Card 2 — Title', type: 'input' },
+      { key: 'fanFav2Desc', label: 'Card 2 — Description', type: 'textarea' },
+      { key: 'fanFav3Emoji', label: 'Card 3 — Emoji', type: 'input' },
+      { key: 'fanFav3Title', label: 'Card 3 — Title', type: 'input' },
+      { key: 'fanFav3Desc', label: 'Card 3 — Description', type: 'textarea' },
+      { key: 'fanFav4Emoji', label: 'Card 4 — Emoji', type: 'input' },
+      { key: 'fanFav4Title', label: 'Card 4 — Title', type: 'input' },
+      { key: 'fanFav4Desc', label: 'Card 4 — Description', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'Home — Reviews',
+    fields: [
+      { key: 'reviewsHeading', label: 'Heading', type: 'input' },
+      { key: 'reviewsSub', label: 'Subtext', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'Menu — Hero',
+    fields: [
+      { key: 'menuHeroEyebrow', label: 'Eyebrow', type: 'input' },
+      { key: 'menuHeroTitle', label: 'Title', type: 'input' },
+      { key: 'menuHeroSub', label: 'Subtext', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'About — Hero',
+    fields: [
+      { key: 'aboutHeroEyebrow', label: 'Eyebrow', type: 'input' },
+      { key: 'aboutHeroTitle', label: 'Title', type: 'input' },
+      { key: 'aboutHeroSub', label: 'Subtext', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'About — Story',
+    fields: [
+      { key: 'aboutIntro', label: 'Intro Paragraph', type: 'textarea' },
+      { key: 'whatWeBelieveHeading', label: '"What We Believe" Heading', type: 'input' },
+      { key: 'aboutBelieve', label: '"What We Believe" Paragraph', type: 'textarea' },
+      { key: 'takeawayDoneRightHeading', label: '"Takeaway, Done Right" Heading', type: 'input' },
+      { key: 'aboutTakeaway', label: '"Takeaway, Done Right" Paragraph', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'About — Value Cards',
+    fields: [
+      { key: 'value1Emoji', label: 'Card 1 — Emoji', type: 'input' },
+      { key: 'value1Title', label: 'Card 1 — Title', type: 'input' },
+      { key: 'value1Desc', label: 'Card 1 — Description', type: 'textarea' },
+      { key: 'value2Emoji', label: 'Card 2 — Emoji', type: 'input' },
+      { key: 'value2Title', label: 'Card 2 — Title', type: 'input' },
+      { key: 'value2Desc', label: 'Card 2 — Description', type: 'textarea' },
+      { key: 'value3Emoji', label: 'Card 3 — Emoji', type: 'input' },
+      { key: 'value3Title', label: 'Card 3 — Title', type: 'input' },
+      { key: 'value3Desc', label: 'Card 3 — Description', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'About — Bottom CTA',
+    fields: [
+      { key: 'aboutCtaEyebrow', label: 'Eyebrow', type: 'input' },
+      { key: 'aboutCtaHeading', label: 'Heading', type: 'input' },
+      { key: 'aboutCtaText', label: 'Text', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'Contact — Hero',
+    fields: [
+      { key: 'contactHeroEyebrow', label: 'Eyebrow', type: 'input' },
+      { key: 'contactHeroTitle', label: 'Title', type: 'input' },
+      { key: 'contactHeroSub', label: 'Subtext', type: 'textarea' }
+    ]
+  },
+  {
+    title: 'Footer (every page)',
+    fields: [
+      { key: 'footerTagline', label: 'Tagline', type: 'textarea' }
+    ]
+  }
 ];
 
 async function loadContentEditor() {
@@ -295,29 +420,93 @@ async function loadContentEditor() {
   var snap = await getDoc(doc(db, 'siteContent', 'main'));
   var content = snap.exists() ? snap.data() : {};
 
-  editor.innerHTML =
-    CONTENT_FIELDS.map(function (f) {
+  editor.innerHTML = CONTENT_GROUPS.map(function (group, i) {
+    var fieldsHtml = group.fields.map(function (f) {
       var value = content[f.key] || '';
       var field = f.type === 'textarea'
         ? '<textarea data-field="' + f.key + '">' + value + '</textarea>'
         : '<input type="text" data-field="' + f.key + '" value="' + escapeAttr(value) + '">';
       return '<div class="admin-field"><label>' + f.label + '</label>' + field + '</div>';
-    }).join('') +
-    '<button id="saveContentBtn" class="btn btn-primary" type="button">Save Site Text</button>';
+    }).join('');
 
-  document.getElementById('saveContentBtn').addEventListener('click', saveContent);
+    return (
+      '<div class="admin-category" data-group-index="' + i + '">' +
+        '<div class="admin-category-header"><strong>' + group.title + '</strong></div>' +
+        fieldsHtml +
+        '<button class="admin-btn admin-btn-primary" type="button" data-action="save-group">Save</button>' +
+      '</div>'
+    );
+  }).join('');
+
+  editor.querySelectorAll('[data-action="save-group"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { saveContentGroup(btn.closest('.admin-category')); });
+  });
 }
 
-async function saveContent() {
-  var editor = document.getElementById('contentEditor');
+async function saveContentGroup(groupEl) {
+  var groupIndex = Number(groupEl.dataset.groupIndex);
+  var group = CONTENT_GROUPS[groupIndex];
   var data = {};
-  CONTENT_FIELDS.forEach(function (f) {
-    data[f.key] = editor.querySelector('[data-field="' + f.key + '"]').value.trim();
+  group.fields.forEach(function (f) {
+    data[f.key] = groupEl.querySelector('[data-field="' + f.key + '"]').value.trim();
   });
 
   try {
     await setDoc(doc(db, 'siteContent', 'main'), data, { merge: true });
-    showToast('Site text saved');
+    showToast(group.title + ' saved');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save — try again');
+  }
+}
+
+// ---------- Business info editor ----------
+
+var BUSINESS_FIELDS = [
+  { key: 'phone1Text', label: 'Phone 1 — Display Text', type: 'input' },
+  { key: 'phone1Href', label: 'Phone 1 — Link (e.g. tel:+27825140077)', type: 'input' },
+  { key: 'phone1Wa', label: 'Phone 1 — WhatsApp number (digits only, e.g. 27825140077)', type: 'input' },
+  { key: 'phone2Text', label: 'Phone 2 — Display Text', type: 'input' },
+  { key: 'phone2Href', label: 'Phone 2 — Link (e.g. tel:+27824211750)', type: 'input' },
+  { key: 'phone2Wa', label: 'Phone 2 — WhatsApp number (digits only)', type: 'input' },
+  { key: 'addressLine1', label: 'Address — Line 1', type: 'input' },
+  { key: 'addressLine2', label: 'Address — Line 2', type: 'input' },
+  { key: 'mapsHref', label: 'Google Maps Link (address links + Read Our Reviews)', type: 'input' },
+  { key: 'writeReviewHref', label: 'Google "Write A Review" Link', type: 'input' },
+  { key: 'hoursMonSat', label: 'Hours — Mon–Sat line', type: 'input' },
+  { key: 'hoursFri', label: 'Hours — Friday closure line', type: 'input' },
+  { key: 'hoursSun', label: 'Hours — Sunday line', type: 'input' },
+  { key: 'emailText', label: 'Email — Display Text', type: 'input' },
+  { key: 'emailHref', label: 'Email — Link (e.g. mailto:you@example.com)', type: 'input' },
+  { key: 'mrdHref', label: 'Mr D Food Link', type: 'input' },
+  { key: 'instagramHref', label: 'Instagram Link', type: 'input' }
+];
+
+async function loadBusinessEditor() {
+  var editor = document.getElementById('businessEditor');
+  var snap = await getDoc(doc(db, 'businessInfo', 'main'));
+  var content = snap.exists() ? snap.data() : {};
+
+  editor.innerHTML =
+    BUSINESS_FIELDS.map(function (f) {
+      var value = content[f.key] || '';
+      return '<div class="admin-field"><label>' + f.label + '</label><input type="text" data-field="' + f.key + '" value="' + escapeAttr(value) + '"></div>';
+    }).join('') +
+    '<button id="saveBusinessBtn" class="btn btn-primary" type="button">Save Business Info</button>';
+
+  document.getElementById('saveBusinessBtn').addEventListener('click', saveBusinessInfo);
+}
+
+async function saveBusinessInfo() {
+  var editor = document.getElementById('businessEditor');
+  var data = {};
+  BUSINESS_FIELDS.forEach(function (f) {
+    data[f.key] = editor.querySelector('[data-field="' + f.key + '"]').value.trim();
+  });
+
+  try {
+    await setDoc(doc(db, 'businessInfo', 'main'), data, { merge: true });
+    showToast('Business info saved');
   } catch (err) {
     console.error(err);
     showToast('Could not save — try again');
@@ -391,6 +580,7 @@ seedBtn.addEventListener('click', async function () {
     });
 
     batch.set(doc(db, 'siteContent', 'main'), SITE_CONTENT);
+    batch.set(doc(db, 'businessInfo', 'main'), BUSINESS_INFO);
 
     Object.keys(DAILY_SPECIALS).forEach(function (day) {
       batch.set(doc(db, 'dailySpecials', day), DAILY_SPECIALS[day]);

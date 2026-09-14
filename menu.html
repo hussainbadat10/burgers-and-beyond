@@ -23,8 +23,8 @@
         <li><a href="about.html">About</a></li>
         <li><a href="contact.html">Contact</a></li>
         <li class="nav-phone-group">
-          <a href="tel:+27825140077" class="btn btn-primary">082 514 0077</a>
-          <a href="tel:+27824211750" class="btn btn-primary">082 421 1750</a>
+          <a href="tel:+27825140077" class="btn btn-primary" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a>
+          <a href="tel:+27824211750" class="btn btn-primary" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a>
         </li>
       </ul>
     </nav>
@@ -34,9 +34,9 @@
   <main>
     <section class="hero" style="padding: 70px 24px 60px;">
       <div class="container">
-        <span class="hero-eyebrow">Takeaway Only</span>
-        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);">Our Menu</h1>
-        <p class="hero-sub">From smash burgers to gatsbys, kotas and flame-grilled wings — everything's made fresh to order. Prices in ZAR (R).</p>
+        <span class="hero-eyebrow" data-content-key="menuHeroEyebrow">Takeaway Only</span>
+        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);" data-content-key="menuHeroTitle">Our Menu</h1>
+        <p class="hero-sub" data-content-key="menuHeroSub">From smash burgers to gatsbys, kotas and flame-grilled wings — everything's made fresh to order. Prices in ZAR (R).</p>
       </div>
     </section>
 
@@ -66,7 +66,7 @@
       <div class="footer-grid">
         <div>
           <h4>Burgers N Beyond</h4>
-          <p>Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.</p>
+          <p data-content-key="footerTagline">Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.</p>
           <p class="footer-halaal"><img src="images/sanha-logo.png" alt="SANHA Certified Halaal logo" class="footer-halaal-logo">SANHA Certified Halaal <span class="arabic-text" lang="ar" dir="rtl">حلال</span></p>
         </div>
         <div>
@@ -81,19 +81,19 @@
         <div>
           <h4>Visit Us</h4>
           <ul>
-            <li><a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener">80 Main Reef Rd</a></li>
-            <li>Randfontein, 1760</li>
-            <li><a href="tel:+27825140077">082 514 0077</a></li>
-            <li><a href="tel:+27824211750">082 421 1750</a></li>
-            <li><a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener">Order on Mr D Food</a></li>
+            <li><a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" data-content-key="addressLine1" data-content-href-key="mapsHref">80 Main Reef Rd</a></li>
+            <li data-content-key="addressLine2">Randfontein, 1760</li>
+            <li><a href="tel:+27825140077" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a></li>
+            <li><a href="tel:+27824211750" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a></li>
+            <li><a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener" data-content-href-key="mrdHref">Order on Mr D Food</a></li>
           </ul>
         </div>
         <div>
           <h4>Hours</h4>
           <ul>
-            <li>Mon–Sat: 10:00 – 18:30</li>
-            <li>Fri: closed 12:20 – 13:20</li>
-            <li>Sun: Closed</li>
+            <li data-content-key="hoursMonSat">Mon–Sat: 10:00 – 18:30</li>
+            <li data-content-key="hoursFri">Fri: closed 12:20 – 13:20</li>
+            <li data-content-key="hoursSun">Sun: Closed</li>
           </ul>
         </div>
       </div>
@@ -125,8 +125,8 @@
       </div>
       <p class="cart-eft-note">⚠️ EFT confirms order!</p>
       <div class="cart-order-actions">
-        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077">Order via WhatsApp — 082 514 0077</a>
-        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27824211750">Order via WhatsApp — 082 421 1750</a>
+        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077" data-content-phone-key="phone1Wa">Order via WhatsApp — <span data-content-key="phone1Text">082 514 0077</span></a>
+        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27824211750" data-content-phone-key="phone2Wa">Order via WhatsApp — <span data-content-key="phone2Text">082 421 1750</span></a>
       </div>
       <button type="button" class="cart-clear">Clear order</button>
       <p class="cart-note">This sends your order list and total to us on WhatsApp. Your order is only confirmed once we receive EFT payment — if payment doesn't reflect, the order will not be processed. We'll let you know when it's ready for collection.</p>
@@ -137,5 +137,6 @@
   <script src="js/cart.js"></script>
   <script type="module" src="js/menu-loader.js"></script>
   <script type="module" src="js/promo.js"></script>
+  <script type="module" src="js/site-content.js"></script>
 </body>
 </html>

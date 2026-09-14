@@ -1,23 +1,56 @@
-// Fills any element with a [data-content-key] attribute from the single
-// siteContent/main Firestore document. Falls back to leaving the page's
-// existing static text in place if Firestore has no value for a key yet,
-// or if the fetch fails — the page always reads correctly either way.
+// Fills editable content from Firestore into the page. Two docs are merged
+// into one lookup object: siteContent/main (headings/paragraphs/cards) and
+// businessInfo/main (phone/address/hours/email/links — centralized so
+// editing one field in the admin panel updates every page that shows it).
+//
+// Supported attributes, usable on any element, in any combination:
+//   data-content-key="fieldName"        sets el.textContent
+//   data-content-href-key="fieldName"   sets el.href
+//   data-content-phone-key="fieldName"  sets el.dataset.phone (for cart.js's WhatsApp buttons)
+//   data-content-map="1"                builds a Google Maps embed src from
+//                                       addressLine1 + addressLine2 (contact.html only)
+//
+// Falls back to the page's existing static content if a field has no value
+// yet, or if the fetch fails entirely — the page always reads correctly.
 import { db } from './firebase-config.js';
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', async function () {
-  var targets = document.querySelectorAll('[data-content-key]');
-  if (!targets.length) return;
+  var hasWork = document.querySelector('[data-content-key], [data-content-href-key], [data-content-phone-key], [data-content-map]');
+  if (!hasWork) return;
 
   try {
-    var snap = await getDoc(doc(db, 'siteContent', 'main'));
-    if (!snap.exists()) return;
+    var [siteSnap, bizSnap] = await Promise.all([
+      getDoc(doc(db, 'siteContent', 'main')),
+      getDoc(doc(db, 'businessInfo', 'main'))
+    ]);
 
-    var content = snap.data();
-    targets.forEach(function (el) {
+    var content = Object.assign(
+      {},
+      siteSnap.exists() ? siteSnap.data() : {},
+      bizSnap.exists() ? bizSnap.data() : {}
+    );
+
+    document.querySelectorAll('[data-content-key]').forEach(function (el) {
       var key = el.getAttribute('data-content-key');
       if (content[key]) el.textContent = content[key];
     });
+
+    document.querySelectorAll('[data-content-href-key]').forEach(function (el) {
+      var key = el.getAttribute('data-content-href-key');
+      if (content[key]) el.setAttribute('href', content[key]);
+    });
+
+    document.querySelectorAll('[data-content-phone-key]').forEach(function (el) {
+      var key = el.getAttribute('data-content-phone-key');
+      if (content[key]) el.setAttribute('data-phone', content[key]);
+    });
+
+    var mapEl = document.querySelector('[data-content-map]');
+    if (mapEl && content.addressLine1) {
+      var fullAddress = content.addressLine1 + (content.addressLine2 ? ', ' + content.addressLine2 : '');
+      mapEl.src = 'https://www.google.com/maps?q=' + encodeURIComponent(fullAddress) + '&output=embed';
+    }
   } catch (err) {
     console.error('Failed to load site content', err);
   }

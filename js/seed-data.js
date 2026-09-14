@@ -145,11 +145,72 @@ export const ITEMS = [
 ];
 
 export const SITE_CONTENT = {
+  // Home hero
+  heroEyebrow: 'Takeaway Only · Flame-Grilled Daily',
   heroHeadline: 'Good Food, Good Mood!',
   heroSub: "Burgers N Beyond serves up smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order and ready for collection.",
+
+  // Home — Fan Favourites
+  fanFavHeading: "What We're Known For",
+  fanFavSub: 'A few of the menu highlights our regulars keep coming back for.',
+  fanFav1Emoji: '🔨', fanFav1Title: 'Hulk Smash', fanFav1Desc: '3x smash patty, 3x cheeses, lettuce, onion, gherkin & green chillie — not for the faint-hearted.',
+  fanFav2Emoji: '🥖', fanFav2Title: 'Gatsby AK47', fanFav2Desc: 'A mega half-metre roll loaded with russians, polonys, viennas and all the sauces.',
+  fanFav3Emoji: '🥪', fanFav3Title: 'Toasted Steak Special', fanFav3Desc: 'Pulled steak, cheese, chips and a signature sauce.',
+  fanFav4Emoji: '🍗', fanFav4Title: 'Flame Grilled Chicken', fanFav4Desc: 'Quarter, half or full chicken — flame-grilled and served with chips, salad or pap.',
+
+  // Home — Reviews
+  reviewsHeading: 'Loved By Locals',
+  reviewsSub: "We're proud of the reviews we've earned on Google. Read what people are saying, or leave your own if you've enjoyed a meal with us.",
+
+  // Menu hero
+  menuHeroEyebrow: 'Takeaway Only',
+  menuHeroTitle: 'Our Menu',
+  menuHeroSub: "From smash burgers to gatsbys, kotas and flame-grilled wings — everything's made fresh to order. Prices in ZAR (R).",
+
+  // About hero
+  aboutHeroEyebrow: 'Our Story',
+  aboutHeroTitle: 'About Burgers N Beyond',
+  aboutHeroSub: "Good burgers, made properly, served fast — that's the whole idea.",
+
+  // About — story paragraphs
   aboutIntro: 'Founded in 2019, Burgers N Beyond started with a simple frustration: too many "quick" burgers taste like it. We set out to build a takeaway spot where every patty is flame-grilled to order, every bun is toasted fresh, and every side is made in-house — without making you wait around for it.',
+  whatWeBelieveHeading: 'What We Believe',
   aboutBelieve: 'From smash burgers to gatsbys, kotas and roti wraps, our menu covers a lot of ground — but nothing on it is an afterthought. Every item gets the same attention: proper ingredients, cooked to order, no shortcuts.',
-  aboutTakeaway: "We're a takeaway-only kitchen, and we've built our whole process around that. Call ahead, and your order will be hot and ready the moment you walk in — no sitting around, no soggy fries from sitting under a heat lamp."
+  takeawayDoneRightHeading: 'Takeaway, Done Right',
+  aboutTakeaway: "We're a takeaway-only kitchen, and we've built our whole process around that. Call ahead, and your order will be hot and ready the moment you walk in — no sitting around, no soggy fries from sitting under a heat lamp.",
+
+  // About — value cards (the 4th, Halaal certification, is not editable content)
+  value1Emoji: '🔥', value1Title: 'Flame-Grilled', value1Desc: 'Every patty, every time — never a frozen shortcut.',
+  value2Emoji: '⏱️', value2Title: 'Made To Order', value2Desc: 'Nothing sits and waits. Your food is cooked when you call.',
+  value3Emoji: '🤝', value3Title: 'Local & Honest', value3Desc: 'Straightforward menu, fair prices, no gimmicks.',
+
+  // About — bottom CTA
+  aboutCtaEyebrow: 'Hungry Yet?',
+  aboutCtaHeading: 'Come Taste The Difference',
+  aboutCtaText: 'Check out the full menu, then give us a call to place your order.',
+
+  // Contact hero
+  contactHeroEyebrow: 'Get In Touch',
+  contactHeroTitle: 'Contact Us',
+  contactHeroSub: 'Call ahead to order, or drop by during opening hours for collection.',
+
+  // Footer (shared across all pages)
+  footerTagline: 'Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.'
+};
+
+export const BUSINESS_INFO = {
+  phone1Text: '082 514 0077', phone1Href: 'tel:+27825140077', phone1Wa: '27825140077',
+  phone2Text: '082 421 1750', phone2Href: 'tel:+27824211750', phone2Wa: '27824211750',
+  addressLine1: '80 Main Reef Rd',
+  addressLine2: 'Randfontein, 1760',
+  mapsHref: 'https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA',
+  writeReviewHref: 'https://search.google.com/local/writereview?placeid=ChIJCcZKIRWXlR4R4rzPcr4PmvA',
+  hoursMonSat: 'Mon–Sat: 10:00 – 18:30',
+  hoursFri: 'Fri: closed 12:20 – 13:20',
+  hoursSun: 'Sun: Closed',
+  emailText: 'Burgersnbeyondsa@gmail.com', emailHref: 'mailto:Burgersnbeyondsa@gmail.com',
+  mrdHref: 'https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689',
+  instagramHref: 'https://www.instagram.com/burgers._n_beyond/'
 };
 
 export const DAILY_SPECIALS = {

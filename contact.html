@@ -23,8 +23,8 @@
         <li><a href="about.html">About</a></li>
         <li><a href="contact.html">Contact</a></li>
         <li class="nav-phone-group">
-          <a href="tel:+27825140077" class="btn btn-primary">082 514 0077</a>
-          <a href="tel:+27824211750" class="btn btn-primary">082 421 1750</a>
+          <a href="tel:+27825140077" class="btn btn-primary" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a>
+          <a href="tel:+27824211750" class="btn btn-primary" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a>
         </li>
       </ul>
     </nav>
@@ -34,9 +34,9 @@
   <main>
     <section class="hero" style="padding: 70px 24px 60px;">
       <div class="container">
-        <span class="hero-eyebrow">Get In Touch</span>
-        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);">Contact Us</h1>
-        <p class="hero-sub">Call ahead to order, or drop by during opening hours for collection.</p>
+        <span class="hero-eyebrow" data-content-key="contactHeroEyebrow">Get In Touch</span>
+        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);" data-content-key="contactHeroTitle">Contact Us</h1>
+        <p class="hero-sub" data-content-key="contactHeroSub">Call ahead to order, or drop by during opening hours for collection.</p>
       </div>
     </section>
 
@@ -51,8 +51,8 @@
               <span class="emoji">📞</span>
               <div>
                 <strong>Phone</strong>
-                <a href="tel:+27825140077">082 514 0077</a><br>
-                <a href="tel:+27824211750">082 421 1750</a>
+                <a href="tel:+27825140077" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a><br>
+                <a href="tel:+27824211750" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a>
               </div>
             </div>
 
@@ -60,8 +60,8 @@
               <span class="emoji">📍</span>
               <div>
                 <strong>Address</strong>
-                80 Main Reef Rd, Randfontein, 1760<br>
-                <a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener">Get Directions</a>
+                <span data-content-key="addressLine1">80 Main Reef Rd</span>, <span data-content-key="addressLine2">Randfontein, 1760</span><br>
+                <a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" data-content-href-key="mapsHref">Get Directions</a>
               </div>
             </div>
 
@@ -69,9 +69,9 @@
               <span class="emoji">🕒</span>
               <div>
                 <strong>Opening Hours</strong>
-                Mon–Sat: 10:00 – 18:30<br>
-                Fri: closed 12:20 – 13:20<br>
-                Sun: Closed
+                <span data-content-key="hoursMonSat">Mon–Sat: 10:00 – 18:30</span><br>
+                <span data-content-key="hoursFri">Fri: closed 12:20 – 13:20</span><br>
+                <span data-content-key="hoursSun">Sun: Closed</span>
               </div>
             </div>
 
@@ -79,7 +79,7 @@
               <span class="emoji">🛵</span>
               <div>
                 <strong>Delivery</strong>
-                <a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener">Order on Mr D Food</a>
+                <a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener" data-content-href-key="mrdHref">Order on Mr D Food</a>
               </div>
             </div>
 
@@ -87,12 +87,12 @@
               <span class="emoji">✉️</span>
               <div>
                 <strong>Queries or Feedback</strong>
-                <a href="mailto:Burgersnbeyondsa@gmail.com">Burgersnbeyondsa@gmail.com</a>
+                <a href="mailto:Burgersnbeyondsa@gmail.com" data-content-key="emailText" data-content-href-key="emailHref">Burgersnbeyondsa@gmail.com</a>
               </div>
             </div>
 
             <div class="social-row">
-              <a href="https://www.instagram.com/burgers._n_beyond/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+              <a href="https://www.instagram.com/burgers._n_beyond/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram" data-content-href-key="instagramHref">
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
@@ -107,7 +107,8 @@
             title="Burgers N Beyond location"
             src="https://www.google.com/maps?q=80+Main+Reef+Rd%2C+Randfontein%2C+1760&output=embed"
             loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade">
+            referrerpolicy="no-referrer-when-downgrade"
+            data-content-map="1">
           </iframe>
 
         </div>
@@ -120,7 +121,7 @@
       <div class="footer-grid">
         <div>
           <h4>Burgers N Beyond</h4>
-          <p>Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.</p>
+          <p data-content-key="footerTagline">Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.</p>
           <p class="footer-halaal"><img src="images/sanha-logo.png" alt="SANHA Certified Halaal logo" class="footer-halaal-logo">SANHA Certified Halaal <span class="arabic-text" lang="ar" dir="rtl">حلال</span></p>
         </div>
         <div>
@@ -135,19 +136,19 @@
         <div>
           <h4>Visit Us</h4>
           <ul>
-            <li><a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener">80 Main Reef Rd</a></li>
-            <li>Randfontein, 1760</li>
-            <li><a href="tel:+27825140077">082 514 0077</a></li>
-            <li><a href="tel:+27824211750">082 421 1750</a></li>
-            <li><a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener">Order on Mr D Food</a></li>
+            <li><a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" data-content-key="addressLine1" data-content-href-key="mapsHref">80 Main Reef Rd</a></li>
+            <li data-content-key="addressLine2">Randfontein, 1760</li>
+            <li><a href="tel:+27825140077" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a></li>
+            <li><a href="tel:+27824211750" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a></li>
+            <li><a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener" data-content-href-key="mrdHref">Order on Mr D Food</a></li>
           </ul>
         </div>
         <div>
           <h4>Hours</h4>
           <ul>
-            <li>Mon–Sat: 10:00 – 18:30</li>
-            <li>Fri: closed 12:20 – 13:20</li>
-            <li>Sun: Closed</li>
+            <li data-content-key="hoursMonSat">Mon–Sat: 10:00 – 18:30</li>
+            <li data-content-key="hoursFri">Fri: closed 12:20 – 13:20</li>
+            <li data-content-key="hoursSun">Sun: Closed</li>
           </ul>
         </div>
       </div>
@@ -179,8 +180,8 @@
       </div>
       <p class="cart-eft-note">⚠️ EFT confirms order!</p>
       <div class="cart-order-actions">
-        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077">Order via WhatsApp — 082 514 0077</a>
-        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27824211750">Order via WhatsApp — 082 421 1750</a>
+        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077" data-content-phone-key="phone1Wa">Order via WhatsApp — <span data-content-key="phone1Text">082 514 0077</span></a>
+        <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27824211750" data-content-phone-key="phone2Wa">Order via WhatsApp — <span data-content-key="phone2Text">082 421 1750</span></a>
       </div>
       <button type="button" class="cart-clear">Clear order</button>
       <p class="cart-note">This sends your order list and total to us on WhatsApp. Your order is only confirmed once we receive EFT payment — if payment doesn't reflect, the order will not be processed. We'll let you know when it's ready for collection.</p>
@@ -189,5 +190,6 @@
 
   <script src="js/script.js"></script>
   <script src="js/cart.js"></script>
+  <script type="module" src="js/site-content.js"></script>
 </body>
 </html>

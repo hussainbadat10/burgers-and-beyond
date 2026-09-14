@@ -48,6 +48,7 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="menu" type="button">Menu</button>
       <button class="admin-tab" data-tab="content" type="button">Site Text</button>
+      <button class="admin-tab" data-tab="business" type="button">Business Info</button>
       <button class="admin-tab" data-tab="specials" type="button">Daily Specials</button>
     </div>
 
@@ -59,8 +60,14 @@
 
     <section class="admin-panel-section" id="tab-content" hidden>
       <h2>Site Text</h2>
-      <p class="admin-hint">Controls the homepage headline/intro and the About page's story paragraphs.</p>
+      <p class="admin-hint">Every heading, paragraph, and card on the site, grouped by page. Save each section separately.</p>
       <div id="contentEditor">Loading…</div>
+    </section>
+
+    <section class="admin-panel-section" id="tab-business" hidden>
+      <h2>Business Info</h2>
+      <p class="admin-hint">Phone numbers, address, hours, email, and delivery/social links — edited once here, shown everywhere they appear across the site (nav, footer, info strip, contact page, map, checkout).</p>
+      <div id="businessEditor">Loading…</div>
     </section>
 
     <section class="admin-panel-section" id="tab-specials" hidden>
