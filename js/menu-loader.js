@@ -89,6 +89,7 @@ function renderCategorySection(cat) {
 
 function renderSidebar() {
   var sidebar = document.getElementById('menuSidebar');
+  sidebar.removeAttribute('aria-busy');
   sidebar.innerHTML = categories.map(function (cat) {
     return (
       '<button type="button" class="menu-sidebar-item" data-category-id="' + escapeAttr(cat.id) + '">' +
@@ -107,6 +108,7 @@ function renderSidebar() {
 
 function renderMain() {
   var main = document.getElementById('menuMain');
+  main.removeAttribute('aria-busy');
   main.innerHTML = categories.map(renderCategorySection).join('');
 }
 
@@ -223,11 +225,17 @@ function updateActiveFromScroll() {
   if (current) setActiveSidebar(current, true);
 }
 
+function updateBackToTop() {
+  var btn = document.getElementById('backToTop');
+  if (btn) btn.hidden = window.scrollY < 500;
+}
+
 function onScroll() {
   if (tickingScroll) return;
   tickingScroll = true;
   window.requestAnimationFrame(function () {
     updateActiveFromScroll();
+    updateBackToTop();
     tickingScroll = false;
   });
 }
@@ -244,9 +252,23 @@ async function loadMenu() {
   var main = document.getElementById('menuMain');
   if (!sidebar || !main) return;
 
+  // Registered up front (not gated on Firestore succeeding) so "back to
+  // top" works even if the menu itself fails to load.
+  var backToTopBtn = document.getElementById('backToTop');
+  if (backToTopBtn) {
+    backToTopBtn.addEventListener('click', function () {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
   try {
-    var catsSnap = await getDocs(query(collection(db, 'menuCategories'), orderBy('order')));
-    var itemsSnap = await getDocs(query(collection(db, 'menuItems'), orderBy('order')));
+    var snaps = await Promise.all([
+      getDocs(query(collection(db, 'menuCategories'), orderBy('order'))),
+      getDocs(query(collection(db, 'menuItems'), orderBy('order')))
+    ]);
+    var catsSnap = snaps[0];
+    var itemsSnap = snaps[1];
 
     categories = [];
     catsSnap.forEach(function (doc) {
@@ -261,6 +283,8 @@ async function loadMenu() {
     });
 
     if (!categories.length) {
+      main.removeAttribute('aria-busy');
+      sidebar.removeAttribute('aria-busy');
       main.innerHTML = '<p style="text-align:center;color:var(--color-text-muted);padding:40px 0;">Menu is being updated — check back shortly, or call us to order.</p>';
       sidebar.innerHTML = '';
       return;
@@ -280,10 +304,11 @@ async function loadMenu() {
       requestAnimationFrame(function () { scrollToCategory(initial); });
     }
 
-    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', updateHeaderHeightVar);
   } catch (err) {
     console.error('Failed to load menu from Firestore', err);
+    main.removeAttribute('aria-busy');
+    sidebar.removeAttribute('aria-busy');
     main.innerHTML = '<p style="text-align:center;color:var(--color-text-muted);padding:40px 0;">Couldn\'t load the menu right now — please call us to order, or try refreshing.</p>';
     sidebar.innerHTML = '';
   }

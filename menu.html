@@ -73,11 +73,54 @@
     <section>
       <div class="container container-wide">
         <div class="menu-layout">
-          <nav class="menu-sidebar" id="menuSidebar" aria-label="Menu categories">
-            <p style="text-align:center;color:var(--color-text-muted);padding:20px 0;">Loading…</p>
+          <nav class="menu-sidebar" id="menuSidebar" aria-label="Menu categories" aria-busy="true">
+            <span class="sr-only">Loading menu categories…</span>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
           </nav>
-          <div class="menu-main" id="menuMain">
-            <p style="text-align:center;color:var(--color-text-muted);padding:40px 0;">Loading menu…</p>
+          <div class="menu-main" id="menuMain" aria-busy="true">
+            <span class="sr-only">Loading menu…</span>
+            <div class="skeleton skeleton-title" aria-hidden="true"></div>
+            <div class="menu-list" aria-hidden="true">
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -130,6 +173,8 @@
     🛒
     <span class="cart-fab-badge">0</span>
   </button>
+
+  <button class="back-to-top" id="backToTop" type="button" aria-label="Back to top" hidden>&uarr;</button>
 
   <div class="cart-backdrop"></div>
 
