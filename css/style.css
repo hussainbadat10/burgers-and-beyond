@@ -965,13 +965,6 @@ section {
   color: var(--color-dark);
 }
 
-.promo-note {
-  font-size: 0.78rem;
-  font-style: italic;
-  color: var(--color-text-muted);
-  margin-top: 4px;
-}
-
 .promo-card-info {
   min-width: 0;
 }
@@ -991,11 +984,6 @@ section {
 }
 
 /* ---------- About page ---------- */
-
-.about-hero {
-  padding: 70px 0 40px;
-  text-align: center;
-}
 
 .about-content {
   max-width: 760px;

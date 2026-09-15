@@ -35,6 +35,10 @@
   function addItem(name, price) {
     var item = findItem(name);
     if (item) {
+      // Refresh to the current price too, not just qty — otherwise an item
+      // sitting in a returning visitor's localStorage cart from before a
+      // price change keeps charging the stale price when added again.
+      item.price = price;
       item.qty += 1;
     } else {
       cart.push({ name: name, price: price, qty: 1 });
@@ -76,8 +80,12 @@
 
   function escapeHtml(str) {
     var div = document.createElement('div');
-    div.textContent = str;
+    div.textContent = str == null ? '' : String(str);
     return div.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    return escapeHtml(str).replace(/"/g, '&quot;');
   }
 
   function buildOrderText() {
@@ -117,15 +125,16 @@
 
     body.innerHTML = cart.map(function (i) {
       var name = escapeHtml(i.name);
+      var attrName = escapeAttr(i.name);
       return (
-        '<div class="cart-line" data-name="' + name + '">' +
+        '<div class="cart-line" data-name="' + attrName + '">' +
           '<div>' +
             '<div class="cart-line-name">' + name + '</div>' +
             '<div class="cart-line-unit">R' + i.price + ' each</div>' +
             '<div class="cart-line-controls">' +
-              '<button type="button" class="cart-qty-btn" data-action="dec">−</button>' +
+              '<button type="button" class="cart-qty-btn" data-action="dec" aria-label="Decrease quantity">−</button>' +
               '<span class="cart-qty-value">' + i.qty + '</span>' +
-              '<button type="button" class="cart-qty-btn" data-action="inc">+</button>' +
+              '<button type="button" class="cart-qty-btn" data-action="inc" aria-label="Increase quantity">+</button>' +
             '</div>' +
           '</div>' +
           '<div class="cart-line-right">' +

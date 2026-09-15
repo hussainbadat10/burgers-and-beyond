@@ -167,7 +167,11 @@ async function migrateHalaalCardIfNeeded() {
   var maxOrder = 0;
   snap.forEach(function (d) {
     var data = d.data();
-    if (data.imageUrl === 'images/sanha-logo.png') hasHalaal = true;
+    // Match on the title too, not just the original static logo path — the
+    // whole point of making this card editable is that the admin can swap
+    // its photo via "Change photo", which would otherwise make this guard
+    // blind to the existing card and insert a duplicate on the next login.
+    if (data.imageUrl === 'images/sanha-logo.png' || /halaal/i.test(data.title || '')) hasHalaal = true;
     if ((data.order || 0) > maxOrder) maxOrder = data.order || 0;
   });
   if (hasHalaal) return;
@@ -208,20 +212,29 @@ async function migrateDailySpecialsIfNeeded() {
 }
 
 async function loadEverything() {
-  await fillMissingContentDefaults();
-  await migrateFixedSiteContentCards('fanFav', 4, 'fanFavourites');
-  await migrateFixedSiteContentCards('value', 3, 'valueCards');
-  await migrateHalaalCardIfNeeded();
-  await migrateDailySpecialsIfNeeded();
-  await loadContentEditorForPage('homeContentEditor', 'home');
-  await loadFanFavEditor();
-  await loadContentEditorForPage('menuContentEditor', 'menu');
-  await loadMenuEditor();
-  await loadSpecialsEditor();
-  await loadContentEditorForPage('aboutContentEditor', 'about');
-  await loadValueCardEditor();
-  await loadContentEditorForPage('contactContentEditor', 'contact');
-  await loadBusinessEditor();
+  // Every individual save/delete/upload action below shows a toast on
+  // failure — without this, a network blip partway through (e.g. during
+  // the migration steps) would leave every tab stuck on "Loading…" forever
+  // with no feedback at all.
+  try {
+    await fillMissingContentDefaults();
+    await migrateFixedSiteContentCards('fanFav', 4, 'fanFavourites');
+    await migrateFixedSiteContentCards('value', 3, 'valueCards');
+    await migrateHalaalCardIfNeeded();
+    await migrateDailySpecialsIfNeeded();
+    await loadContentEditorForPage('homeContentEditor', 'home');
+    await loadFanFavEditor();
+    await loadContentEditorForPage('menuContentEditor', 'menu');
+    await loadMenuEditor();
+    await loadSpecialsEditor();
+    await loadContentEditorForPage('aboutContentEditor', 'about');
+    await loadValueCardEditor();
+    await loadContentEditorForPage('contactContentEditor', 'contact');
+    await loadBusinessEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not load the admin panel — check your connection and refresh');
+  }
 }
 
 // ---------- Menu editor ----------
@@ -297,7 +310,7 @@ function renderItemRow(item) {
       '</div>' +
       '<div class="admin-item-fields">' +
         '<input type="text" data-field="name" value="' + escapeAttr(item.name) + '" placeholder="Name">' +
-        '<textarea data-field="description" placeholder="Description (optional)">' + (item.description || '') + '</textarea>' +
+        '<textarea data-field="description" placeholder="Description (optional)">' + escapeAttr(item.description || '') + '</textarea>' +
       '</div>' +
       '<input type="number" data-field="price" value="' + item.price + '" min="0" step="1">' +
       '<div class="admin-item-actions">' +
@@ -324,8 +337,8 @@ async function saveItem(row) {
   var price = Number(row.querySelector('[data-field="price"]').value);
   var description = row.querySelector('[data-field="description"]').value.trim();
 
-  if (!name || !Number.isFinite(price)) {
-    showToast('Enter a valid name and price first');
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    showToast('Enter a valid name and a price above R0 first');
     return;
   }
 
@@ -394,8 +407,8 @@ async function addItem(row) {
   var name = row.querySelector('[data-field="name"]').value.trim();
   var price = Number(row.querySelector('[data-field="price"]').value);
 
-  if (!name || !Number.isFinite(price)) {
-    showToast('Enter a valid name and price first');
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    showToast('Enter a valid name and a price above R0 first');
     return;
   }
 
@@ -539,7 +552,7 @@ async function loadContentEditorForPage(containerId, page) {
     var fieldsHtml = group.fields.map(function (f) {
       var value = content[f.key] || '';
       var field = f.type === 'textarea'
-        ? '<textarea data-field="' + f.key + '">' + value + '</textarea>'
+        ? '<textarea data-field="' + f.key + '">' + escapeAttr(value) + '</textarea>'
         : '<input type="text" data-field="' + f.key + '" value="' + escapeAttr(value) + '">';
       return '<div class="admin-field"><label>' + f.label + '</label>' + field + '</div>';
     }).join('');
@@ -620,7 +633,7 @@ function makeCardCollectionEditor(collectionName, editorElId) {
         '</div>' +
         '<input type="text" data-field="emoji" value="' + escapeAttr(card.emoji || '') + '" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
         '<input type="text" data-field="title" value="' + escapeAttr(card.title || '') + '" placeholder="Title">' +
-        '<textarea data-field="desc" placeholder="Description">' + (card.desc || '') + '</textarea>' +
+        '<textarea data-field="desc" placeholder="Description">' + escapeAttr(card.desc || '') + '</textarea>' +
         '<div class="admin-item-actions">' +
           '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
           '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
@@ -895,7 +908,7 @@ async function saveSpecial(row) {
   var id = row.dataset.itemId;
   var item = row.querySelector('[data-field="item"]').value.trim();
   var promo = row.querySelector('[data-field="promo"]').value.trim();
-  var price = Number(row.querySelector('[data-field="price"]').value) || 0;
+  var price = Math.max(0, Number(row.querySelector('[data-field="price"]').value) || 0);
 
   if (!item || !promo) {
     showToast('Item name and promo are both required');
@@ -929,7 +942,7 @@ async function addSpecial(addRowEl) {
   var day = addRowEl.dataset.day;
   var item = addRowEl.querySelector('[data-field="item"]').value.trim();
   var promo = addRowEl.querySelector('[data-field="promo"]').value.trim();
-  var price = Number(addRowEl.querySelector('[data-field="price"]').value) || 0;
+  var price = Math.max(0, Number(addRowEl.querySelector('[data-field="price"]').value) || 0);
 
   if (!item || !promo) {
     showToast('Item name and promo are both required');

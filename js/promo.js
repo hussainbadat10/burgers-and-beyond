@@ -23,7 +23,7 @@ function escapeAttr(str) {
 
 function renderCard(special, dayName) {
   var photo = special.imageUrl
-    ? '<img class="promo-photo" src="' + escapeHtml(special.imageUrl) + '" alt="' + escapeHtml(special.item) + '">'
+    ? '<img class="promo-photo" src="' + escapeAttr(special.imageUrl) + '" alt="' + escapeAttr(special.item) + '">'
     : '<span class="promo-emoji" aria-hidden="true">🎉</span>';
 
   // Older specials (saved before the Price field existed) have no numeric
