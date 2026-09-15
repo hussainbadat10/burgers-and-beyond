@@ -8,7 +8,7 @@
 // admin.html (and its own JS) is deliberately NOT cached — it's a
 // password-protected internal tool, not something worth precaching for
 // every visitor, and editing content offline wouldn't work anyway.
-var CACHE_NAME = 'bnb-shell-v1';
+var CACHE_NAME = 'bnb-shell-v2';
 
 var PRECACHE_URLS = [
   'index.html',
@@ -95,20 +95,28 @@ self.addEventListener('fetch', function (event) {
     return;
   }
 
-  // Static assets (CSS/JS/images): serve from cache instantly if present,
-  // but always refetch in the background so the cache is never more than
-  // one visit stale.
+  // Static assets (CSS/JS/images): same network-first policy as HTML pages.
+  //
+  // This used to be stale-while-revalidate (serve the cached copy instantly,
+  // refetch in the background for next time) for a snappier repeat load.
+  // That's the wrong tradeoff for this project: it means a real bug fix in
+  // any .js file doesn't actually reach a returning visitor until their
+  // *second* load after the deploy — their first load still runs the old,
+  // broken code straight from cache while the fix downloads silently in the
+  // background. That happened for real (a fix to site-content.js appeared
+  // deployed and correct in every fresh check, but a returning visitor's
+  // browser kept running the pre-fix version for one more load). Trading a
+  // few milliseconds of "instant from cache" for "a fix always actually
+  // takes effect immediately" is the right call for a small site like this.
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      var fetchPromise = fetch(event.request).then(function (response) {
-        if (response.ok) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) { cache.put(event.request, copy); });
-        }
-        return response;
-      }).catch(function () { return cached; });
-
-      return cached || fetchPromise;
+    fetch(event.request).then(function (response) {
+      if (response.ok) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) { cache.put(event.request, copy); });
+      }
+      return response;
+    }).catch(function () {
+      return caches.match(event.request);
     })
   );
 });

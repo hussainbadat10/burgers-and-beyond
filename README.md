@@ -130,11 +130,11 @@ The menu's search box (`#menuSearch` in `menu.html`, logic in `js/menu-loader.js
 
 **Deliberately never caches Firestore data.** The menu, daily specials, and "Open Now" badge always fetch fresh from the network; if there's genuinely no connection, the page just shows its existing "menu is loading" fallback rather than risking stale prices or a wrong open/closed status being shown as if it were current.
 
-**Two caching strategies, chosen to avoid the classic "stuck on an old version" service-worker failure mode:**
-- **HTML pages**: network-first. A visitor with a connection always gets the latest deploy; the cached copy is only ever used as an offline fallback. Verified directly — edited a page, reloaded while "online" in a test, confirmed the fresh content won and the cache updated to match (not the reverse).
-- **CSS/JS/images**: stale-while-revalidate — instant paint from cache, with a background refetch on every load so the cache is never more than one visit stale.
+**Everything — HTML pages and CSS/JS/images alike — is network-first.** A visitor with a connection always gets the latest deploy; the cache is only ever read from as an offline fallback. Verified directly — edited a page, reloaded while "online" in a test, confirmed the fresh content won and the cache updated to match (not the reverse).
 
-To force a cache reset after a future change to what gets precached, bump `CACHE_NAME` in `sw.js` (currently `bnb-shell-v1`) — the old cache is deleted automatically on activate.
+CSS/JS/images were originally stale-while-revalidate instead (serve the cached copy instantly, refetch in the background for next time), for a snappier repeat load. **That was the wrong tradeoff and caused a real incident**: a genuine bug fix to `site-content.js` (the address "Line 2" not disappearing when blanked — see git history) checked out correctly in every fresh test, but a real returning visitor's browser kept running the pre-fix code for one more load — their first load after the deploy still served the old, broken `site-content.js` straight from cache, with the fix only downloading silently in the background for their *next* load. Switched to network-first for these too once this surfaced; a few milliseconds of "instant from cache" isn't worth "a shipped fix doesn't actually take effect for a page load or two."
+
+To force a cache reset after a future change to what gets precached, bump `CACHE_NAME` in `sw.js` (currently `bnb-shell-v2`) — the old cache is deleted automatically on activate.
 
 ## One-time activation: Fan Favourites, Value Cards, Daily Specials
 
