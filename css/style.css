@@ -536,6 +536,15 @@ section {
   min-width: 0;
 }
 
+.menu-category-section {
+  scroll-margin-top: calc(var(--header-height, 88px) + 16px);
+  margin-bottom: 56px;
+}
+
+.menu-category-section:last-child {
+  margin-bottom: 0;
+}
+
 .menu-category-title {
   display: flex;
   align-items: center;

@@ -1,14 +1,17 @@
 // Renders the menu (categories + items) into #menuSidebar/#menuMain from
-// Firestore. Categories sit in a sticky sidebar (horizontal chips on mobile);
-// clicking one swaps the item grid in #menuMain, so css/style.css and
-// js/cart.js (which listens for .menu-item-add clicks via delegation on
-// document) work unchanged regardless of which category is showing.
+// Firestore. All categories render in one continuous scroll in #menuMain;
+// the sidebar (horizontal chips on mobile) highlights whichever category is
+// currently in view (scroll-spy) and clicking one smooth-scrolls to it.
+// css/style.css and js/cart.js (which listens for .menu-item-add clicks via
+// delegation on document) work unchanged regardless of scroll position.
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 var categories = [];
 var itemsByCategory = {};
 var activeCategoryId = null;
+var suppressSpyUntil = 0;
+var tickingScroll = false;
 
 function escapeHtml(str) {
   var div = document.createElement('div');
@@ -18,6 +21,10 @@ function escapeHtml(str) {
 
 function escapeAttr(str) {
   return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
+function sectionId(categoryId) {
+  return 'menu-cat-' + categoryId;
 }
 
 function renderItem(item) {
@@ -44,28 +51,7 @@ function renderItem(item) {
   );
 }
 
-function renderSidebar() {
-  var sidebar = document.getElementById('menuSidebar');
-  sidebar.innerHTML = categories.map(function (cat) {
-    return (
-      '<button type="button" class="menu-sidebar-item" data-category-id="' + escapeAttr(cat.id) + '">' +
-        '<span class="emoji">' + (cat.emoji || '') + '</span> ' + escapeHtml(cat.name) +
-      '</button>'
-    );
-  }).join('');
-
-  sidebar.querySelectorAll('.menu-sidebar-item').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      setActiveCategory(btn.dataset.categoryId);
-    });
-  });
-}
-
-function renderMain(categoryId) {
-  var main = document.getElementById('menuMain');
-  var cat = categories.find(function (c) { return c.id === categoryId; });
-  if (!cat) return;
-
+function renderCategorySection(cat) {
   var items = itemsByCategory[cat.id] || [];
 
   var dividerHtml = '';
@@ -90,25 +76,160 @@ function renderMain(categoryId) {
     ? items.map(renderItem).join('')
     : '<p style="color:var(--color-text-muted);">No items in this category yet.</p>';
 
-  main.innerHTML = (
+  return (
     dividerHtml +
-    '<h2 class="menu-category-title"><span class="emoji">' + (cat.emoji || '') + '</span> ' + escapeHtml(cat.name) + '</h2>' +
-    noteHtml +
-    '<div class="menu-list">' + itemsHtml + '</div>' +
-    comboHtml
+    '<section class="menu-category-section" id="' + sectionId(cat.id) + '" data-category-id="' + escapeAttr(cat.id) + '">' +
+      '<h2 class="menu-category-title"><span class="emoji">' + (cat.emoji || '') + '</span> ' + escapeHtml(cat.name) + '</h2>' +
+      noteHtml +
+      '<div class="menu-list">' + itemsHtml + '</div>' +
+      comboHtml +
+    '</section>'
   );
 }
 
-function setActiveCategory(categoryId) {
-  if (!categories.some(function (c) { return c.id === categoryId; })) return;
+function renderSidebar() {
+  var sidebar = document.getElementById('menuSidebar');
+  sidebar.innerHTML = categories.map(function (cat) {
+    return (
+      '<button type="button" class="menu-sidebar-item" data-category-id="' + escapeAttr(cat.id) + '">' +
+        '<span class="emoji">' + (cat.emoji || '') + '</span> ' + escapeHtml(cat.name) +
+      '</button>'
+    );
+  }).join('');
+
+  sidebar.querySelectorAll('.menu-sidebar-item').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      scrollToCategory(btn.dataset.categoryId);
+      setActiveSidebar(btn.dataset.categoryId, true);
+    });
+  });
+}
+
+function renderMain() {
+  var main = document.getElementById('menuMain');
+  main.innerHTML = categories.map(renderCategorySection).join('');
+}
+
+function isMobileLayout() {
+  return window.matchMedia('(max-width: 800px)').matches;
+}
+
+function getStickyOffset() {
+  var header = document.querySelector('.site-header');
+  var headerHeight = header ? header.offsetHeight : 0;
+  if (isMobileLayout()) {
+    var sidebar = document.getElementById('menuSidebar');
+    return headerHeight + (sidebar ? sidebar.offsetHeight : 0);
+  }
+  return headerHeight;
+}
+
+function scrollToCategory(categoryId) {
+  var target = document.getElementById(sectionId(categoryId));
+  if (!target) return;
+  var top = target.getBoundingClientRect().top + window.scrollY - getStickyOffset() - 16;
+  suppressSpyUntil = Date.now() + 3000; // hard cap; cleared early once the scroll actually settles
+  window.scrollTo({ top: top, behavior: 'smooth' });
+  waitForScrollSettle();
+}
+
+// A smooth-scroll to a far-off category can take well over a second, and a
+// fixed suppression timeout would either cut in too early (scroll-spy
+// flickers through in-between categories while still animating) or hang
+// on to a stale suppression too long. Instead, poll until the scroll
+// position stops moving, then hand control back to scroll-spy right away.
+function waitForScrollSettle() {
+  var lastY = window.scrollY;
+  var stableFrames = 0;
+
+  function check() {
+    if (Date.now() >= suppressSpyUntil) return; // hard cap reached, scroll-spy already resumed on its own
+
+    var y = window.scrollY;
+    if (Math.abs(y - lastY) < 1) {
+      stableFrames++;
+    } else {
+      stableFrames = 0;
+      lastY = y;
+    }
+
+    if (stableFrames >= 3) {
+      suppressSpyUntil = 0;
+      updateActiveFromScroll();
+      return;
+    }
+    requestAnimationFrame(check);
+  }
+
+  requestAnimationFrame(check);
+}
+
+function ensureSidebarItemVisible(btn) {
+  var sidebar = document.getElementById('menuSidebar');
+  if (!sidebar || !btn) return;
+
+  if (isMobileLayout()) {
+    var sRect = sidebar.getBoundingClientRect();
+    var bRect = btn.getBoundingClientRect();
+    if (bRect.left < sRect.left || bRect.right > sRect.right) {
+      sidebar.scrollTo({
+        left: sidebar.scrollLeft + (bRect.left - sRect.left) - (sRect.width - bRect.width) / 2,
+        behavior: 'smooth'
+      });
+    }
+  } else {
+    var sRect2 = sidebar.getBoundingClientRect();
+    var bRect2 = btn.getBoundingClientRect();
+    if (bRect2.top < sRect2.top || bRect2.bottom > sRect2.bottom) {
+      sidebar.scrollTo({
+        top: sidebar.scrollTop + (bRect2.top - sRect2.top) - (sRect2.height - bRect2.height) / 2,
+        behavior: 'smooth'
+      });
+    }
+  }
+}
+
+function setActiveSidebar(categoryId, updateHash) {
+  if (categoryId === activeCategoryId) return;
   activeCategoryId = categoryId;
 
+  var activeBtn = null;
   document.querySelectorAll('.menu-sidebar-item').forEach(function (btn) {
-    btn.classList.toggle('active', btn.dataset.categoryId === categoryId);
+    var isActive = btn.dataset.categoryId === categoryId;
+    btn.classList.toggle('active', isActive);
+    if (isActive) activeBtn = btn;
   });
 
-  renderMain(categoryId);
-  history.replaceState(null, '', '#' + categoryId);
+  if (activeBtn) ensureSidebarItemVisible(activeBtn);
+  if (updateHash) history.replaceState(null, '', '#' + categoryId);
+}
+
+function updateActiveFromScroll() {
+  if (Date.now() < suppressSpyUntil) return;
+
+  var offset = getStickyOffset() + 24;
+  var current = categories.length ? categories[0].id : null;
+
+  for (var i = 0; i < categories.length; i++) {
+    var section = document.getElementById(sectionId(categories[i].id));
+    if (!section) continue;
+    if (section.getBoundingClientRect().top - offset <= 0) {
+      current = categories[i].id;
+    } else {
+      break;
+    }
+  }
+
+  if (current) setActiveSidebar(current, true);
+}
+
+function onScroll() {
+  if (tickingScroll) return;
+  tickingScroll = true;
+  window.requestAnimationFrame(function () {
+    updateActiveFromScroll();
+    tickingScroll = false;
+  });
 }
 
 function updateHeaderHeightVar() {
@@ -146,14 +267,20 @@ async function loadMenu() {
     }
 
     renderSidebar();
+    renderMain();
+    updateHeaderHeightVar();
 
     var initial = window.location.hash.replace('#', '');
     if (!categories.some(function (c) { return c.id === initial; })) {
       initial = categories[0].id;
     }
-    setActiveCategory(initial);
+    setActiveSidebar(initial, false);
+    if (window.location.hash) {
+      // Land directly on the linked category instead of the top of the page.
+      requestAnimationFrame(function () { scrollToCategory(initial); });
+    }
 
-    updateHeaderHeightVar();
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', updateHeaderHeightVar);
   } catch (err) {
     console.error('Failed to load menu from Firestore', err);
