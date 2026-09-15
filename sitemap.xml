@@ -16,4 +16,8 @@
     <loc>https://hussainbadat10.github.io/burgers-and-beyond/contact.html</loc>
     <priority>0.6</priority>
   </url>
+  <url>
+    <loc>https://hussainbadat10.github.io/burgers-and-beyond/privacy.html</loc>
+    <priority>0.3</priority>
+  </url>
 </urlset>

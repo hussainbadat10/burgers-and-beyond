@@ -13,10 +13,11 @@ menu.html       Full menu — loaded live from Firestore, sticky category sideba
 about.html      Restaurant story — hero, story paragraphs, value cards, CTA: all editable
 contact.html    Phone, address, hours, map — all editable via admin
 admin.html      Password-protected admin panel (menu, photos, site text, business info, daily specials)
+privacy.html    Plain-language privacy/cookies page, linked from every footer
 404.html        Branded not-found page (GitHub Pages serves this automatically
                 for any unmatched URL)
 robots.txt      Allows crawling, disallows /admin.html, points to sitemap.xml
-sitemap.xml     Lists the 4 public pages for search engines
+sitemap.xml     Lists the public pages for search engines
 site.webmanifest  "Add to Home Screen" metadata (name, icons, theme color)
 css/style.css   Shared styles (site + admin)
 js/script.js       Mobile nav toggle + active-link highlighting + scroll-reveal
@@ -30,6 +31,7 @@ js/site-content.js Fills [data-content-key]/[data-content-href-key]/
                     Firestore (siteContent/main + businessInfo/main)
 js/store-status.js Live "Open Now / Closed" badge — computed client-side each
                     minute from businessInfo's structured hours*Time fields
+js/analytics.js    Cookie-consent-gated Google Analytics (GA4) — see below
 js/seed-data.js    One-time starter data (the original real menu/text/business
                     info), used by admin.html's "Import Starter Data" button
 js/admin.js        Admin panel logic (auth, CRUD, photo upload, seeding)
@@ -97,6 +99,15 @@ Shows next to the "Opening Hours" heading on the home page and contact page (`js
 Deliberately reads a **separate set of structured fields**, not the free-text `hoursMonSat`/`hoursFri`/`hoursSun` display lines: `hoursMonSatOpenTime`, `hoursMonSatCloseTime`, `hoursFriOpenTime1`, `hoursFriCloseTime1`, `hoursFriOpenTime2`, `hoursFriCloseTime2` (all `HH:MM` 24-hour, edited via native time pickers in the admin panel's Business Info tab). Keeping these separate from the display text means editing the wording of the hours (e.g. rephrasing the Friday line) can never silently break the badge, and vice versa.
 
 **One-time activation step:** these 6 fields didn't exist in the live database before this feature shipped, and there's no way to backfill them without real admin credentials — they'll appear automatically (via `fillMissingContentDefaults()`) the **next time the owner logs into `/admin.html`**, pre-filled with the current real hours. Until then, the badge silently stays hidden rather than showing anything — it never guesses.
+
+## Analytics & cookie consent
+
+Google Analytics (GA4, measurement ID `G-RYYWS16PFL`) is wired up in `js/analytics.js`, but **nothing loads until a visitor clicks "Accept"** on the cookie banner shown once per browser (bottom of every public page, not admin.html). Decline — or just ignoring the banner — means zero tracking scripts run and zero cookies get set. The choice is remembered in `localStorage` (`bnb_cookie_consent`) so returning visitors aren't asked again.
+
+- **Conversion tracking**: `js/cart.js` fires a GA4 `order_via_whatsapp` event (with the order's ZAR value) whenever someone actually sends an order — this is what answers "how many visitors are converting into orders," not just page views.
+- **Why gate it at all**: GA4 sets tracking cookies, and South Africa's POPIA (similar to GDPR) generally expects consent before that happens — so this only ever tracks visitors who said yes.
+- `privacy.html` (linked from every footer) explains this in plain language — what's tracked, what isn't, and how to reset the choice.
+- The floating cart button and menu page's "back to top" button both shift up automatically while the cookie banner is showing (`--cookie-banner-offset` CSS variable, set in `js/analytics.js`) so nothing overlaps at any screen size.
 
 ## Still placeholder — replace once real content is decided
 

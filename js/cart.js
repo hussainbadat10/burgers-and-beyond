@@ -211,6 +211,7 @@
         if (!cart.length) return;
         var phone = waBtn.dataset.phone;
         var url = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(buildOrderText());
+        if (window.trackEvent) window.trackEvent('order_via_whatsapp', { value: total(), currency: 'ZAR' });
         window.open(url, '_blank', 'noopener');
         clearCart();
         closePanel();
