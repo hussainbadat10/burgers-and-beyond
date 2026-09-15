@@ -2,6 +2,7 @@
 // (persisted in localStorage) with a floating summary panel that
 // calculates the running total and hands the order off via WhatsApp,
 // since there's no online payment on this site.
+import { escapeHtml, escapeAttr } from './escape-utils.js';
 
 (function () {
   var STORAGE_KEY = 'bnbCart';
@@ -76,16 +77,6 @@
 
   function itemCount() {
     return cart.reduce(function (sum, i) { return sum + i.qty; }, 0);
-  }
-
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str == null ? '' : String(str);
-    return div.innerHTML;
-  }
-
-  function escapeAttr(str) {
-    return escapeHtml(str).replace(/"/g, '&quot;');
   }
 
   function buildOrderText() {

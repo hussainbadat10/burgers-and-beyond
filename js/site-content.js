@@ -35,16 +35,7 @@ import { db } from './firebase-config.js';
 import {
   doc, getDoc, collection, getDocs, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str).replace(/"/g, '&quot;');
-}
+import { escapeHtml, escapeAttr } from './escape-utils.js';
 
 function renderCard(card) {
   // A real photo/logo (e.g. the Halaal certification badge) takes priority

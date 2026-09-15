@@ -5,21 +5,10 @@ import { db } from './firebase-config.js';
 import {
   doc, getDoc, collection, getDocs, query, orderBy
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { escapeHtml, escapeAttr } from './escape-utils.js';
 
 var DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML.replace(/"/g, '&quot;');
-}
 
 function renderCard(special, dayName) {
   var photo = special.imageUrl

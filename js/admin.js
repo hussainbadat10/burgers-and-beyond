@@ -7,6 +7,7 @@ import {
   query, orderBy, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 import { CATEGORIES, ITEMS, SITE_CONTENT, BUSINESS_INFO, DAILY_SPECIALS, FAN_FAVOURITES, VALUE_CARDS } from './seed-data.js';
+import { escapeAttr } from './escape-utils.js';
 
 // Photo uploads go to Cloudinary (free, no card required), not Firebase
 // Storage (which now requires Google's paid Blaze plan). This preset is
@@ -21,6 +22,37 @@ var CLOUDINARY_UPLOAD_PRESET = 'BnB_Menu';
 // where supported) per visitor, no separate processing step needed.
 function optimizedCloudinaryUrl(rawUrl) {
   return rawUrl.replace('/image/upload/', '/image/upload/w_500,c_limit,q_auto,f_auto/');
+}
+
+// Shared by every photo-upload flow (menu items, card collections, daily
+// specials) — uploads to Cloudinary and returns the size-optimized URL.
+// Throws on failure; each caller wraps it in its own try/catch since the
+// surrounding toast wording and Firestore doc path differ per collection.
+async function uploadPhotoToCloudinary(file) {
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+  var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
+    method: 'POST',
+    body: formData
+  });
+  if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
+  var result = await res.json();
+  return optimizedCloudinaryUrl(result.secure_url);
+}
+
+// Swaps a row's thumbnail to show a freshly uploaded photo — same
+// placeholder-<div>-or-existing-<img> shape used by every photo row.
+function swapAdminPhotoThumbnail(placeholderOrImg, url) {
+  if (placeholderOrImg.tagName === 'IMG') {
+    placeholderOrImg.src = url;
+  } else {
+    var newImg = document.createElement('img');
+    newImg.className = 'admin-item-photo';
+    newImg.src = url;
+    placeholderOrImg.replaceWith(newImg);
+  }
 }
 
 var loginView = document.getElementById('loginView');
@@ -39,12 +71,6 @@ function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   setTimeout(function () { toast.classList.remove('show'); }, 2200);
-}
-
-function escapeAttr(str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML.replace(/"/g, '&quot;');
 }
 
 // ---------- Auth ----------
@@ -260,26 +286,22 @@ async function loadMenuEditor() {
   var editor = document.getElementById('menuEditor');
   var data = await fetchCategoriesAndItems();
 
-  if (!data.categories.length) {
-    seedBanner.hidden = false;
-    editor.innerHTML = '<p class="admin-hint">Nothing here yet — import the starter data above, or add a category directly in the Firestore console.</p>';
-    return;
-  }
+  seedBanner.hidden = data.categories.length > 0;
 
-  seedBanner.hidden = true;
+  var categoriesHtml = data.categories.length
+    ? data.categories.map(function (cat) {
+        var items = data.itemsByCategory[cat.id] || [];
+        return (
+          '<div class="admin-category" data-category-id="' + cat.id + '">' +
+            renderCategoryHeader(cat) +
+            items.map(renderItemRow).join('') +
+            renderAddItemRow(cat.id) +
+          '</div>'
+        );
+      }).join('')
+    : '<p class="admin-hint">No categories yet — import the starter data above, or add one below to get started.</p>';
 
-  editor.innerHTML = data.categories.map(function (cat) {
-    var items = data.itemsByCategory[cat.id] || [];
-    return (
-      '<div class="admin-category" data-category-id="' + cat.id + '">' +
-        '<div class="admin-category-header">' +
-          '<strong>' + (cat.emoji || '') + ' ' + escapeAttr(cat.name) + '</strong>' +
-        '</div>' +
-        items.map(renderItemRow).join('') +
-        renderAddItemRow(cat.id) +
-      '</div>'
-    );
-  }).join('');
+  editor.innerHTML = categoriesHtml + renderAddCategoryRow();
 
   editor.querySelectorAll('[data-action="save-item"]').forEach(function (btn) {
     btn.addEventListener('click', function () { saveItem(btn.closest('.admin-item-row')); });
@@ -293,6 +315,50 @@ async function loadMenuEditor() {
   editor.querySelectorAll('[data-action="add-item"]').forEach(function (btn) {
     btn.addEventListener('click', function () { addItem(btn.closest('.admin-add-item')); });
   });
+  editor.querySelectorAll('[data-action="save-category"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { saveCategory(btn.closest('.admin-category')); });
+  });
+  editor.querySelectorAll('[data-action="delete-category"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { deleteCategory(btn.closest('.admin-category')); });
+  });
+  editor.querySelectorAll('[data-action="add-category"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { addCategory(btn.closest('.admin-add-category')); });
+  });
+}
+
+function renderCategoryHeader(cat) {
+  var emojiId = 'cat-emoji-' + cat.id;
+  var nameId = 'cat-name-' + cat.id;
+  var noteId = 'cat-note-' + cat.id;
+
+  return (
+    '<div class="admin-category-header">' +
+      '<label class="sr-only" for="' + emojiId + '">Category emoji</label>' +
+      '<input type="text" id="' + emojiId + '" data-field="emoji" value="' + escapeAttr(cat.emoji || '') + '" style="width:56px;text-align:center;font-size:1.3rem;" placeholder="🍔">' +
+      '<label class="sr-only" for="' + nameId + '">Category name</label>' +
+      '<input type="text" id="' + nameId + '" data-field="name" value="' + escapeAttr(cat.name) + '" placeholder="Category name" style="flex:1;font-weight:700;">' +
+      '<label class="sr-only" for="' + noteId + '">Category note, shown under the heading</label>' +
+      '<input type="text" id="' + noteId + '" data-field="note" value="' + escapeAttr(cat.note || '') + '" placeholder="Note shown under the heading (optional)" style="flex:2;">' +
+      '<button class="admin-btn admin-btn-primary" type="button" data-action="save-category">Save</button>' +
+      '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-category">Delete</button>' +
+    '</div>'
+  );
+}
+
+function renderAddCategoryRow() {
+  return (
+    '<div class="admin-category admin-add-category">' +
+      '<div class="admin-category-header">' +
+        '<label class="sr-only" for="add-cat-emoji">New category emoji</label>' +
+        '<input type="text" id="add-cat-emoji" data-field="emoji" style="width:56px;text-align:center;font-size:1.3rem;" placeholder="🍔">' +
+        '<label class="sr-only" for="add-cat-name">New category name</label>' +
+        '<input type="text" id="add-cat-name" data-field="name" placeholder="New category name" style="flex:1;">' +
+        '<label class="sr-only" for="add-cat-note">New category note</label>' +
+        '<input type="text" id="add-cat-note" data-field="note" placeholder="Note shown under the heading (optional)" style="flex:2;">' +
+        '<button class="admin-btn admin-btn-primary" type="button" data-action="add-category">Add Category</button>' +
+      '</div>' +
+    '</div>'
+  );
 }
 
 function renderItemRow(item) {
@@ -300,6 +366,9 @@ function renderItemRow(item) {
     ? '<img src="' + escapeAttr(item.imageUrl) + '" class="admin-item-photo" alt="">'
     : '<div class="admin-item-photo"></div>';
   var fileId = 'photo-' + item.id;
+  var nameId = 'item-name-' + item.id;
+  var descId = 'item-desc-' + item.id;
+  var priceId = 'item-price-' + item.id;
 
   return (
     '<div class="admin-item-row" data-item-id="' + item.id + '">' +
@@ -309,10 +378,13 @@ function renderItemRow(item) {
         '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
       '</div>' +
       '<div class="admin-item-fields">' +
-        '<input type="text" data-field="name" value="' + escapeAttr(item.name) + '" placeholder="Name">' +
-        '<textarea data-field="description" placeholder="Description (optional)">' + escapeAttr(item.description || '') + '</textarea>' +
+        '<label class="sr-only" for="' + nameId + '">Item name</label>' +
+        '<input type="text" id="' + nameId + '" data-field="name" value="' + escapeAttr(item.name) + '" placeholder="Name">' +
+        '<label class="sr-only" for="' + descId + '">Description</label>' +
+        '<textarea id="' + descId + '" data-field="description" placeholder="Description (optional)">' + escapeAttr(item.description || '') + '</textarea>' +
       '</div>' +
-      '<input type="number" data-field="price" value="' + item.price + '" min="0" step="1">' +
+      '<label class="sr-only" for="' + priceId + '">Price in Rand</label>' +
+      '<input type="number" id="' + priceId + '" data-field="price" value="' + item.price + '" min="0" step="1">' +
       '<div class="admin-item-actions">' +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
@@ -322,13 +394,102 @@ function renderItemRow(item) {
 }
 
 function renderAddItemRow(categoryId) {
+  var nameId = 'add-item-name-' + categoryId;
+  var priceId = 'add-item-price-' + categoryId;
   return (
     '<div class="admin-add-item" data-category-id="' + categoryId + '">' +
-      '<input type="text" data-field="name" placeholder="New item name">' +
-      '<input type="number" data-field="price" placeholder="Price" min="0" step="1">' +
+      '<label class="sr-only" for="' + nameId + '">New item name</label>' +
+      '<input type="text" id="' + nameId + '" data-field="name" placeholder="New item name">' +
+      '<label class="sr-only" for="' + priceId + '">New item price in Rand</label>' +
+      '<input type="number" id="' + priceId + '" data-field="price" placeholder="Price" min="0" step="1">' +
       '<button class="admin-btn admin-btn-primary" type="button" data-action="add-item">Add Item</button>' +
     '</div>'
   );
+}
+
+function slugifyCategoryName(name) {
+  var slug = name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || ('category-' + Date.now());
+}
+
+async function saveCategory(catEl) {
+  var id = catEl.dataset.categoryId;
+  var emoji = catEl.querySelector('[data-field="emoji"]').value.trim();
+  var name = catEl.querySelector('[data-field="name"]').value.trim();
+  var note = catEl.querySelector('[data-field="note"]').value.trim();
+
+  if (!name) {
+    showToast('Category name is required');
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, 'menuCategories', id), { name: name, emoji: emoji, note: note });
+    showToast('Category saved');
+    loadMenuEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save — try again');
+  }
+}
+
+async function deleteCategory(catEl) {
+  var id = catEl.dataset.categoryId;
+  var hasItems = !!catEl.querySelector('.admin-item-row');
+  if (hasItems) {
+    showToast('Delete this category’s items first, then delete the category');
+    return;
+  }
+  if (!confirm('Delete this category permanently?')) return;
+
+  try {
+    await deleteDoc(doc(db, 'menuCategories', id));
+    showToast('Category deleted');
+    loadMenuEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not delete — try again');
+  }
+}
+
+async function addCategory(addRowEl) {
+  var emoji = addRowEl.querySelector('[data-field="emoji"]').value.trim();
+  var name = addRowEl.querySelector('[data-field="name"]').value.trim();
+  var note = addRowEl.querySelector('[data-field="note"]').value.trim();
+
+  if (!name) {
+    showToast('Category name is required');
+    return;
+  }
+
+  try {
+    var catsSnap = await getDocs(collection(db, 'menuCategories'));
+    var maxOrder = 0;
+    var existingIds = [];
+    catsSnap.forEach(function (d) {
+      existingIds.push(d.id);
+      var order = d.data().order || 0;
+      if (order > maxOrder) maxOrder = order;
+    });
+
+    // menuCategories uses human-readable slugs as document ids (not
+    // Firestore auto-ids) — pick a unique one from the name, same as the
+    // seeded categories already have.
+    var slugBase = slugifyCategoryName(name);
+    var slug = slugBase;
+    var n = 2;
+    while (existingIds.indexOf(slug) !== -1) {
+      slug = slugBase + '-' + n;
+      n++;
+    }
+
+    await setDoc(doc(db, 'menuCategories', slug), { name: name, emoji: emoji, note: note, order: maxOrder + 1 });
+    showToast('Category added');
+    loadMenuEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not add — try again');
+  }
 }
 
 async function saveItem(row) {
@@ -372,29 +533,9 @@ async function uploadItemPhoto(input) {
 
   showToast('Uploading photo…');
   try {
-    var formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-    var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
-    var result = await res.json();
-    var url = optimizedCloudinaryUrl(result.secure_url);
-
+    var url = await uploadPhotoToCloudinary(file);
     await updateDoc(doc(db, 'menuItems', id), { imageUrl: url });
-
-    var img = row.querySelector('.admin-item-photo');
-    if (img.tagName === 'IMG') {
-      img.src = url;
-    } else {
-      var newImg = document.createElement('img');
-      newImg.className = 'admin-item-photo';
-      newImg.src = url;
-      img.replaceWith(newImg);
-    }
+    swapAdminPhotoThumbnail(row.querySelector('.admin-item-photo'), url);
     showToast('Photo updated');
   } catch (err) {
     console.error(err);
@@ -551,10 +692,11 @@ async function loadContentEditorForPage(containerId, page) {
     var group = entry.group;
     var fieldsHtml = group.fields.map(function (f) {
       var value = content[f.key] || '';
+      var fieldId = 'content-' + f.key;
       var field = f.type === 'textarea'
-        ? '<textarea data-field="' + f.key + '">' + escapeAttr(value) + '</textarea>'
-        : '<input type="text" data-field="' + f.key + '" value="' + escapeAttr(value) + '">';
-      return '<div class="admin-field"><label>' + f.label + '</label>' + field + '</div>';
+        ? '<textarea id="' + fieldId + '" data-field="' + f.key + '">' + escapeAttr(value) + '</textarea>'
+        : '<input type="text" id="' + fieldId + '" data-field="' + f.key + '" value="' + escapeAttr(value) + '">';
+      return '<div class="admin-field"><label for="' + fieldId + '">' + f.label + '</label>' + field + '</div>';
     }).join('');
 
     return (
@@ -623,6 +765,9 @@ function makeCardCollectionEditor(collectionName, editorElId) {
       ? '<img src="' + escapeAttr(card.imageUrl) + '" class="admin-item-photo" alt="">'
       : '<div class="admin-item-photo"></div>';
     var fileId = collectionName + '-photo-' + card.id;
+    var emojiId = collectionName + '-emoji-' + card.id;
+    var titleId = collectionName + '-title-' + card.id;
+    var descId = collectionName + '-desc-' + card.id;
 
     return (
       '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 2fr auto;" data-item-id="' + card.id + '">' +
@@ -631,9 +776,12 @@ function makeCardCollectionEditor(collectionName, editorElId) {
           '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-photo" style="display:none">' +
           '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
         '</div>' +
-        '<input type="text" data-field="emoji" value="' + escapeAttr(card.emoji || '') + '" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
-        '<input type="text" data-field="title" value="' + escapeAttr(card.title || '') + '" placeholder="Title">' +
-        '<textarea data-field="desc" placeholder="Description">' + escapeAttr(card.desc || '') + '</textarea>' +
+        '<label class="sr-only" for="' + emojiId + '">Card emoji</label>' +
+        '<input type="text" id="' + emojiId + '" data-field="emoji" value="' + escapeAttr(card.emoji || '') + '" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
+        '<label class="sr-only" for="' + titleId + '">Card title</label>' +
+        '<input type="text" id="' + titleId + '" data-field="title" value="' + escapeAttr(card.title || '') + '" placeholder="Title">' +
+        '<label class="sr-only" for="' + descId + '">Card description</label>' +
+        '<textarea id="' + descId + '" data-field="desc" placeholder="Description">' + escapeAttr(card.desc || '') + '</textarea>' +
         '<div class="admin-item-actions">' +
           '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
           '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
@@ -643,10 +791,14 @@ function makeCardCollectionEditor(collectionName, editorElId) {
   }
 
   function renderAddRow() {
+    var emojiId = collectionName + '-add-emoji';
+    var titleId = collectionName + '-add-title';
     return (
       '<div class="admin-add-item" style="grid-template-columns: 56px 1fr auto;">' +
-        '<input type="text" data-field="emoji" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
-        '<input type="text" data-field="title" placeholder="New card title">' +
+        '<label class="sr-only" for="' + emojiId + '">New card emoji</label>' +
+        '<input type="text" id="' + emojiId + '" data-field="emoji" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
+        '<label class="sr-only" for="' + titleId + '">New card title</label>' +
+        '<input type="text" id="' + titleId + '" data-field="title" placeholder="New card title">' +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="add-item">Add Card</button>' +
       '</div>'
     );
@@ -693,29 +845,9 @@ function makeCardCollectionEditor(collectionName, editorElId) {
 
     showToast('Uploading photo…');
     try {
-      var formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-      var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
-        method: 'POST',
-        body: formData
-      });
-      if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
-      var result = await res.json();
-      var url = optimizedCloudinaryUrl(result.secure_url);
-
+      var url = await uploadPhotoToCloudinary(file);
       await updateDoc(doc(db, collectionName, id), { imageUrl: url });
-
-      var img = row.querySelector('.admin-item-photo');
-      if (img.tagName === 'IMG') {
-        img.src = url;
-      } else {
-        var newImg = document.createElement('img');
-        newImg.className = 'admin-item-photo';
-        newImg.src = url;
-        img.replaceWith(newImg);
-      }
+      swapAdminPhotoThumbnail(row.querySelector('.admin-item-photo'), url);
       showToast('Photo updated');
     } catch (err) {
       console.error(err);
@@ -795,7 +927,8 @@ async function loadBusinessEditor() {
     BUSINESS_FIELDS.map(function (f) {
       var value = content[f.key] || '';
       var inputType = f.type === 'time' ? 'time' : 'text';
-      return '<div class="admin-field"><label>' + f.label + '</label><input type="' + inputType + '" data-field="' + f.key + '" value="' + escapeAttr(value) + '"></div>';
+      var fieldId = 'biz-' + f.key;
+      return '<div class="admin-field"><label for="' + fieldId + '">' + f.label + '</label><input type="' + inputType + '" id="' + fieldId + '" data-field="' + f.key + '" value="' + escapeAttr(value) + '"></div>';
     }).join('') +
     '<button id="saveBusinessBtn" class="btn btn-primary" type="button">Save Business Info</button>';
 
@@ -840,6 +973,9 @@ function renderSpecialRow(day, special) {
     ? '<img src="' + escapeAttr(special.imageUrl) + '" class="admin-item-photo" alt="">'
     : '<div class="admin-item-photo"></div>';
   var fileId = 'special-photo-' + day + '-' + special.id;
+  var itemId = 'special-item-' + day + '-' + special.id;
+  var promoId = 'special-promo-' + day + '-' + special.id;
+  var priceId = 'special-price-' + day + '-' + special.id;
 
   return (
     '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr 110px auto;" data-day="' + day + '" data-item-id="' + special.id + '">' +
@@ -848,9 +984,12 @@ function renderSpecialRow(day, special) {
         '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
         '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
       '</div>' +
-      '<input type="text" data-field="item" value="' + escapeAttr(special.item || '') + '" placeholder="Item name">' +
-      '<input type="text" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off">' +
-      '<input type="number" data-field="price" value="' + (special.price || '') + '" placeholder="Price (R)" min="0" step="1">' +
+      '<label class="sr-only" for="' + itemId + '">Special item name</label>' +
+      '<input type="text" id="' + itemId + '" data-field="item" value="' + escapeAttr(special.item || '') + '" placeholder="Item name">' +
+      '<label class="sr-only" for="' + promoId + '">Special promo text</label>' +
+      '<input type="text" id="' + promoId + '" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off">' +
+      '<label class="sr-only" for="' + priceId + '">Special price in Rand</label>' +
+      '<input type="number" id="' + priceId + '" data-field="price" value="' + (special.price || '') + '" placeholder="Price (R)" min="0" step="1">' +
       '<div class="admin-item-actions">' +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-special">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-special">Delete</button>' +
@@ -860,11 +999,17 @@ function renderSpecialRow(day, special) {
 }
 
 function renderAddSpecialRow(day) {
+  var itemId = 'add-special-item-' + day;
+  var promoId = 'add-special-promo-' + day;
+  var priceId = 'add-special-price-' + day;
   return (
     '<div class="admin-add-item" style="grid-template-columns: 1fr 1fr 110px auto;" data-day="' + day + '">' +
-      '<input type="text" data-field="item" placeholder="New item name">' +
-      '<input type="text" data-field="promo" placeholder="e.g. 10% off">' +
-      '<input type="number" data-field="price" placeholder="Price (R)" min="0" step="1">' +
+      '<label class="sr-only" for="' + itemId + '">New special item name for ' + DAY_LABELS[day] + '</label>' +
+      '<input type="text" id="' + itemId + '" data-field="item" placeholder="New item name">' +
+      '<label class="sr-only" for="' + promoId + '">New special promo text for ' + DAY_LABELS[day] + '</label>' +
+      '<input type="text" id="' + promoId + '" data-field="promo" placeholder="e.g. 10% off">' +
+      '<label class="sr-only" for="' + priceId + '">New special price in Rand for ' + DAY_LABELS[day] + '</label>' +
+      '<input type="number" id="' + priceId + '" data-field="price" placeholder="Price (R)" min="0" step="1">' +
       '<button class="admin-btn admin-btn-primary" type="button" data-action="add-special">Add Special</button>' +
     '</div>'
   );
@@ -975,29 +1120,9 @@ async function uploadSpecialPhoto(input) {
 
   showToast('Uploading photo…');
   try {
-    var formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-    var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
-      method: 'POST',
-      body: formData
-    });
-    if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
-    var result = await res.json();
-    var url = optimizedCloudinaryUrl(result.secure_url);
-
+    var url = await uploadPhotoToCloudinary(file);
     await updateDoc(doc(db, 'dailySpecials', day, 'items', id), { imageUrl: url });
-
-    var img = row.querySelector('.admin-item-photo');
-    if (img.tagName === 'IMG') {
-      img.src = url;
-    } else {
-      var newImg = document.createElement('img');
-      newImg.className = 'admin-item-photo';
-      newImg.src = url;
-      img.replaceWith(newImg);
-    }
+    swapAdminPhotoThumbnail(row.querySelector('.admin-item-photo'), url);
     showToast('Photo updated');
   } catch (err) {
     console.error(err);

@@ -6,6 +6,7 @@
 // delegation on document) work unchanged regardless of scroll position.
 import { db } from './firebase-config.js';
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import { escapeHtml, escapeAttr } from './escape-utils.js';
 
 var categories = [];
 var itemsByCategory = {};
@@ -13,16 +14,6 @@ var activeCategoryId = null;
 var suppressSpyUntil = 0;
 var tickingScroll = false;
 var searchActive = false;
-
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str == null ? '' : String(str);
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  return escapeHtml(str).replace(/"/g, '&quot;');
-}
 
 function sectionId(categoryId) {
   return 'menu-cat-' + categoryId;
