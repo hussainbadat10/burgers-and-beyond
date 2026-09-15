@@ -14,6 +14,15 @@ import { CATEGORIES, ITEMS, SITE_CONTENT, BUSINESS_INFO, DAILY_SPECIALS } from '
 var CLOUDINARY_CLOUD_NAME = 'ys741dda';
 var CLOUDINARY_UPLOAD_PRESET = 'BnB_Menu';
 
+// Cloudinary's raw secure_url is the untouched original upload — a phone
+// camera photo can be 5-10MB, which is wildly oversized for an 80px menu
+// thumbnail. Cloudinary can transform on the fly via the URL itself, so
+// this caps the width, and lets it auto-pick quality/format (WebP/AVIF
+// where supported) per visitor, no separate processing step needed.
+function optimizedCloudinaryUrl(rawUrl) {
+  return rawUrl.replace('/image/upload/', '/image/upload/w_500,c_limit,q_auto,f_auto/');
+}
+
 var loginView = document.getElementById('loginView');
 var adminView = document.getElementById('adminView');
 var loginForm = document.getElementById('loginForm');
@@ -264,7 +273,7 @@ async function uploadItemPhoto(input) {
     });
     if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
     var result = await res.json();
-    var url = result.secure_url;
+    var url = optimizedCloudinaryUrl(result.secure_url);
 
     await updateDoc(doc(db, 'menuItems', id), { imageUrl: url });
 
@@ -591,7 +600,7 @@ async function uploadSpecialPhoto(input) {
     });
     if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
     var result = await res.json();
-    var url = result.secure_url;
+    var url = optimizedCloudinaryUrl(result.secure_url);
 
     await setDoc(doc(db, 'dailySpecials', day), { imageUrl: url }, { merge: true });
 
