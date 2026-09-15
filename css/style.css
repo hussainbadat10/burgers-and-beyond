@@ -1678,6 +1678,14 @@ section {
   margin-bottom: 20px;
 }
 
+.admin-subheading {
+  font-size: 1rem;
+  color: var(--color-dark);
+  margin: 32px 0 6px;
+  padding-top: 24px;
+  border-top: 2px solid var(--color-bg-alt);
+}
+
 .admin-category {
   background: var(--color-white);
   border-radius: var(--radius);

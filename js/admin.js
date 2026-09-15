@@ -213,12 +213,15 @@ async function loadEverything() {
   await migrateFixedSiteContentCards('value', 3, 'valueCards');
   await migrateHalaalCardIfNeeded();
   await migrateDailySpecialsIfNeeded();
-  await loadMenuEditor();
-  await loadContentEditor();
-  await loadBusinessEditor();
-  await loadSpecialsEditor();
+  await loadContentEditorForPage('homeContentEditor', 'home');
   await loadFanFavEditor();
+  await loadContentEditorForPage('menuContentEditor', 'menu');
+  await loadMenuEditor();
+  await loadSpecialsEditor();
+  await loadContentEditorForPage('aboutContentEditor', 'about');
   await loadValueCardEditor();
+  await loadContentEditorForPage('contactContentEditor', 'contact');
+  await loadBusinessEditor();
 }
 
 // ---------- Menu editor ----------
@@ -418,9 +421,16 @@ async function addItem(row) {
 // ---------- Site text editor ----------
 // Grouped by page/section, each group saves independently to siteContent/main.
 
+// Each group belongs to one `page` — the admin panel's tabs match the
+// site's own nav (Home / Menu / About / Contact) exactly, so a group
+// renders inside that page's tab, in the same top-to-bottom order the
+// content actually appears on the real page. `footerTagline` shows on
+// every page's footer but has to live in one tab — Home, since that's
+// the site's landing page.
 var CONTENT_GROUPS = [
   {
-    title: 'Home — Hero',
+    page: 'home',
+    title: 'Hero',
     fields: [
       { key: 'heroEyebrow', label: 'Eyebrow', type: 'input' },
       { key: 'heroHeadline', label: 'Headline', type: 'input' },
@@ -428,21 +438,31 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    title: 'Home — Fan Favourites',
+    page: 'home',
+    title: 'Fan Favourites — Heading',
     fields: [
       { key: 'fanFavHeading', label: 'Section Heading', type: 'input' },
       { key: 'fanFavSub', label: 'Section Subtext', type: 'textarea' }
     ]
   },
   {
-    title: 'Home — Reviews',
+    page: 'home',
+    title: 'Reviews',
     fields: [
       { key: 'reviewsHeading', label: 'Heading', type: 'input' },
       { key: 'reviewsSub', label: 'Subtext', type: 'textarea' }
     ]
   },
   {
-    title: 'Menu — Hero',
+    page: 'home',
+    title: 'Footer (shown on every page)',
+    fields: [
+      { key: 'footerTagline', label: 'Tagline', type: 'textarea' }
+    ]
+  },
+  {
+    page: 'menu',
+    title: 'Hero',
     fields: [
       { key: 'menuHeroEyebrow', label: 'Eyebrow', type: 'input' },
       { key: 'menuHeroTitle', label: 'Title', type: 'input' },
@@ -450,7 +470,8 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    title: 'About — Hero',
+    page: 'about',
+    title: 'Hero',
     fields: [
       { key: 'aboutHeroEyebrow', label: 'Eyebrow', type: 'input' },
       { key: 'aboutHeroTitle', label: 'Title', type: 'input' },
@@ -458,7 +479,8 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    title: 'About — Story',
+    page: 'about',
+    title: 'Story',
     fields: [
       { key: 'aboutIntro', label: 'Intro Paragraph', type: 'textarea' },
       { key: 'whatWeBelieveHeading', label: '"What We Believe" Heading', type: 'input' },
@@ -468,7 +490,8 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    title: 'About — Bottom CTA',
+    page: 'about',
+    title: 'Bottom CTA',
     fields: [
       { key: 'aboutCtaEyebrow', label: 'Eyebrow', type: 'input' },
       { key: 'aboutCtaHeading', label: 'Heading', type: 'input' },
@@ -476,27 +499,43 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    title: 'Contact — Hero',
+    page: 'contact',
+    title: 'Hero',
     fields: [
       { key: 'contactHeroEyebrow', label: 'Eyebrow', type: 'input' },
       { key: 'contactHeroTitle', label: 'Title', type: 'input' },
       { key: 'contactHeroSub', label: 'Subtext', type: 'textarea' }
     ]
-  },
-  {
-    title: 'Footer (every page)',
-    fields: [
-      { key: 'footerTagline', label: 'Tagline', type: 'textarea' }
-    ]
   }
 ];
 
-async function loadContentEditor() {
-  var editor = document.getElementById('contentEditor');
-  var snap = await getDoc(doc(db, 'siteContent', 'main'));
-  var content = snap.exists() ? snap.data() : {};
+// Cached across the 4 per-page calls below so editing/saving on 4 different
+// tabs only ever reads siteContent/main from Firestore once per admin
+// session load, not once per tab.
+var siteContentCache = null;
 
-  editor.innerHTML = CONTENT_GROUPS.map(function (group, i) {
+async function fetchSiteContent() {
+  if (siteContentCache) return siteContentCache;
+  var snap = await getDoc(doc(db, 'siteContent', 'main'));
+  siteContentCache = snap.exists() ? snap.data() : {};
+  return siteContentCache;
+}
+
+// Renders only the CONTENT_GROUPS entries belonging to one page into that
+// page's own tab — data-group-index still refers to the group's position in
+// the full CONTENT_GROUPS array (not the filtered list), so saveContentGroup
+// below needs no changes to find the right group.
+async function loadContentEditorForPage(containerId, page) {
+  var editor = document.getElementById(containerId);
+  var content = await fetchSiteContent();
+
+  var groups = [];
+  CONTENT_GROUPS.forEach(function (group, i) {
+    if (group.page === page) groups.push({ group: group, index: i });
+  });
+
+  editor.innerHTML = groups.map(function (entry) {
+    var group = entry.group;
     var fieldsHtml = group.fields.map(function (f) {
       var value = content[f.key] || '';
       var field = f.type === 'textarea'
@@ -506,7 +545,7 @@ async function loadContentEditor() {
     }).join('');
 
     return (
-      '<div class="admin-category" data-group-index="' + i + '">' +
+      '<div class="admin-category" data-group-index="' + entry.index + '">' +
         '<div class="admin-category-header"><strong>' + group.title + '</strong></div>' +
         fieldsHtml +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-group">Save</button>' +

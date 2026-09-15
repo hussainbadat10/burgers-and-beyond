@@ -49,48 +49,54 @@
     </div>
 
     <div class="admin-tabs">
-      <button class="admin-tab active" data-tab="menu" type="button">Menu</button>
-      <button class="admin-tab" data-tab="content" type="button">Site Text</button>
-      <button class="admin-tab" data-tab="fanfav" type="button">Fan Favourites</button>
-      <button class="admin-tab" data-tab="values" type="button">Value Cards</button>
-      <button class="admin-tab" data-tab="business" type="button">Business Info</button>
-      <button class="admin-tab" data-tab="specials" type="button">Daily Specials</button>
+      <button class="admin-tab active" data-tab="home" type="button">Home</button>
+      <button class="admin-tab" data-tab="menu" type="button">Menu</button>
+      <button class="admin-tab" data-tab="about" type="button">About</button>
+      <button class="admin-tab" data-tab="contact" type="button">Contact</button>
     </div>
 
-    <section class="admin-panel-section" id="tab-menu">
-      <h2>Menu Items</h2>
-      <p class="admin-hint">Edit a name, price, or description and click Save on that item. Upload a photo by clicking "Change photo" under its thumbnail.</p>
-      <div id="menuEditor">Loading…</div>
-    </section>
+    <section class="admin-panel-section" id="tab-home">
+      <h2>Home Page</h2>
+      <p class="admin-hint">Every heading, paragraph, and review on the home page. Save each section separately.</p>
+      <div id="homeContentEditor">Loading…</div>
 
-    <section class="admin-panel-section" id="tab-content" hidden>
-      <h2>Site Text</h2>
-      <p class="admin-hint">Every heading, paragraph, and card on the site, grouped by page. Save each section separately.</p>
-      <div id="contentEditor">Loading…</div>
-    </section>
-
-    <section class="admin-panel-section" id="tab-fanfav" hidden>
-      <h2>Fan Favourites</h2>
-      <p class="admin-hint">The cards under "What We're Known For" on the home page. Add, edit, or delete as many as you like.</p>
+      <h3 class="admin-subheading">Fan Favourites</h3>
+      <p class="admin-hint">The cards under "What We're Known For". Add, edit, or delete as many as you like.</p>
       <div id="fanFavEditor">Loading…</div>
     </section>
 
-    <section class="admin-panel-section" id="tab-values" hidden>
-      <h2>Value Cards</h2>
+    <section class="admin-panel-section" id="tab-menu" hidden>
+      <h2>Menu Page</h2>
+      <p class="admin-hint">The heading text at the top of the Menu page.</p>
+      <div id="menuContentEditor">Loading…</div>
+
+      <h3 class="admin-subheading">Menu Items</h3>
+      <p class="admin-hint">Edit a name, price, or description and click Save on that item. Upload a photo by clicking "Change photo" under its thumbnail.</p>
+      <div id="menuEditor">Loading…</div>
+
+      <h3 class="admin-subheading">Daily Specials</h3>
+      <p class="admin-hint">Sets what shows in the "Today's Special" banner. Add as many specials as you like per day, or remove them — Sunday has no section since the shop is closed.</p>
+      <div id="specialsEditor">Loading…</div>
+    </section>
+
+    <section class="admin-panel-section" id="tab-about" hidden>
+      <h2>About Page</h2>
+      <p class="admin-hint">Every heading and paragraph on the About page.</p>
+      <div id="aboutContentEditor">Loading…</div>
+
+      <h3 class="admin-subheading">Value Cards</h3>
       <p class="admin-hint">The cards on the About page, including the 100% Halaal card (edit its photo via "Change photo"). Add, edit, or delete as many as you like.</p>
       <div id="valueCardsEditor">Loading…</div>
     </section>
 
-    <section class="admin-panel-section" id="tab-business" hidden>
-      <h2>Business Info</h2>
+    <section class="admin-panel-section" id="tab-contact" hidden>
+      <h2>Contact Page</h2>
+      <p class="admin-hint">The heading text at the top of the Contact page.</p>
+      <div id="contactContentEditor">Loading…</div>
+
+      <h3 class="admin-subheading">Business Info</h3>
       <p class="admin-hint">Phone numbers, address, hours, email, and delivery/social links — edited once here, shown everywhere they appear across the site (nav, footer, info strip, contact page, map, checkout).</p>
       <div id="businessEditor">Loading…</div>
-    </section>
-
-    <section class="admin-panel-section" id="tab-specials" hidden>
-      <h2>Daily Specials</h2>
-      <p class="admin-hint">Sets what shows in the "Today's Special" banner on the Menu page. Add as many specials as you like per day, or remove them — Sunday has no section since the shop is closed.</p>
-      <div id="specialsEditor">Loading…</div>
     </section>
   </div>
 
