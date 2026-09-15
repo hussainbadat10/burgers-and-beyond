@@ -51,6 +51,8 @@
     <div class="admin-tabs">
       <button class="admin-tab active" data-tab="menu" type="button">Menu</button>
       <button class="admin-tab" data-tab="content" type="button">Site Text</button>
+      <button class="admin-tab" data-tab="fanfav" type="button">Fan Favourites</button>
+      <button class="admin-tab" data-tab="values" type="button">Value Cards</button>
       <button class="admin-tab" data-tab="business" type="button">Business Info</button>
       <button class="admin-tab" data-tab="specials" type="button">Daily Specials</button>
     </div>
@@ -67,6 +69,18 @@
       <div id="contentEditor">Loading…</div>
     </section>
 
+    <section class="admin-panel-section" id="tab-fanfav" hidden>
+      <h2>Fan Favourites</h2>
+      <p class="admin-hint">The cards under "What We're Known For" on the home page. Add, edit, or delete as many as you like.</p>
+      <div id="fanFavEditor">Loading…</div>
+    </section>
+
+    <section class="admin-panel-section" id="tab-values" hidden>
+      <h2>Value Cards</h2>
+      <p class="admin-hint">The cards on the About page (next to the fixed 100% Halaal card, which always stays last and isn't edited here). Add, edit, or delete as many as you like.</p>
+      <div id="valueCardsEditor">Loading…</div>
+    </section>
+
     <section class="admin-panel-section" id="tab-business" hidden>
       <h2>Business Info</h2>
       <p class="admin-hint">Phone numbers, address, hours, email, and delivery/social links — edited once here, shown everywhere they appear across the site (nav, footer, info strip, contact page, map, checkout).</p>
@@ -75,7 +89,7 @@
 
     <section class="admin-panel-section" id="tab-specials" hidden>
       <h2>Daily Specials</h2>
-      <p class="admin-hint">Sets what shows in the "Today's Special" banner on the Menu page. Sunday has no slot since the shop is closed.</p>
+      <p class="admin-hint">Sets what shows in the "Today's Special" banner on the Menu page. Add as many specials as you like per day, or remove them — Sunday has no section since the shop is closed.</p>
       <div id="specialsEditor">Loading…</div>
     </section>
   </div>

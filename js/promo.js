@@ -1,15 +1,40 @@
-// Daily special banner — shows the admin-set promotion for today's day of
-// the week, read from Firestore (dailySpecials/{day}). Hidden entirely on
-// Sundays (shop is closed) and hidden if no special is set for today.
+// Daily special banner — shows every special set for today's day of the
+// week (dailySpecials/{day}/items), not just one. Hidden entirely on
+// Sundays (shop is closed) and hidden if nothing is set for today.
 import { db } from './firebase-config.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+import {
+  doc, getDoc, collection, getDocs, query, orderBy
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
 var DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function renderCard(special, dayName) {
+  var photo = special.imageUrl
+    ? '<img class="promo-photo" src="' + escapeHtml(special.imageUrl) + '" alt="' + escapeHtml(special.item) + '">'
+    : '<span class="promo-emoji" aria-hidden="true">🎉</span>';
+
+  return (
+    '<div class="promo-card">' +
+      photo +
+      '<div>' +
+        '<div class="promo-day">' + dayName + "'s Special</div>" +
+        '<div class="promo-text">' + escapeHtml(special.item) + ' — ' + escapeHtml(special.promo) + '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   var promoStrip = document.getElementById('promoStrip');
-  if (!promoStrip) return;
+  var container = document.getElementById('promoCards');
+  if (!promoStrip || !container) return;
 
   var dayIndex = new Date().getDay();
   var dayKey = DAY_KEYS[dayIndex];
@@ -17,26 +42,32 @@ document.addEventListener('DOMContentLoaded', async function () {
   if (dayKey === 'sunday') return; // closed, no special to show
 
   try {
-    var snap = await getDoc(doc(db, 'dailySpecials', dayKey));
-    if (!snap.exists()) return;
+    var snap = await getDocs(query(collection(db, 'dailySpecials', dayKey, 'items'), orderBy('order')));
+    var specials = [];
+    snap.forEach(function (d) {
+      var data = d.data();
+      if (data.item && data.promo) specials.push(data);
+    });
 
-    var special = snap.data();
-    if (!special.item || !special.promo) return;
-
-    promoStrip.querySelector('.promo-day').textContent = DAY_NAMES[dayIndex] + "'s Special";
-    promoStrip.querySelector('.promo-text').textContent = special.item + ' — ' + special.promo;
-
-    var photo = promoStrip.querySelector('.promo-photo');
-    var emoji = promoStrip.querySelector('.promo-emoji');
-    if (special.imageUrl) {
-      photo.src = special.imageUrl;
-      photo.alt = special.item;
-      photo.hidden = false;
-      emoji.hidden = true;
+    // Pre-migration fallback: the old single-special-per-day doc still has
+    // real data until the next admin login moves it into the subcollection
+    // above. Without this, the banner would just go blank for that window.
+    if (!specials.length) {
+      var legacySnap = await getDoc(doc(db, 'dailySpecials', dayKey));
+      if (legacySnap.exists()) {
+        var legacy = legacySnap.data();
+        if (legacy.item && legacy.promo) specials.push(legacy);
+      }
     }
+
+    if (!specials.length) return;
+
+    container.innerHTML = specials.map(function (s) {
+      return renderCard(s, DAY_NAMES[dayIndex]);
+    }).join('');
 
     promoStrip.hidden = false;
   } catch (err) {
-    console.error('Failed to load daily special', err);
+    console.error('Failed to load daily specials', err);
   }
 });

@@ -908,9 +908,18 @@ section {
   );
 }
 
-.promo-card {
-  max-width: 640px;
+.promo-cards {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  max-width: 960px;
   margin: 0 auto;
+}
+
+.promo-card {
+  flex: 1 1 340px;
+  max-width: 420px;
   background: var(--color-white);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -932,10 +941,6 @@ section {
   border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
-}
-
-.promo-photo[hidden] {
-  display: none;
 }
 
 .promo-day {

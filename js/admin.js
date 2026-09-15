@@ -6,7 +6,7 @@ import {
   collection, getDocs, getDoc, doc, setDoc, updateDoc, deleteDoc, addDoc,
   query, orderBy, writeBatch
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
-import { CATEGORIES, ITEMS, SITE_CONTENT, BUSINESS_INFO, DAILY_SPECIALS } from './seed-data.js';
+import { CATEGORIES, ITEMS, SITE_CONTENT, BUSINESS_INFO, DAILY_SPECIALS, FAN_FAVOURITES, VALUE_CARDS } from './seed-data.js';
 
 // Photo uploads go to Cloudinary (free, no card required), not Firebase
 // Storage (which now requires Google's paid Blaze plan). This preset is
@@ -120,12 +120,73 @@ async function fillMissingContentDefaults() {
   }
 }
 
+// Fan Favourites and Value Cards used to be a fixed set of siteContent
+// fields (fanFav1..4 / value1..3) — now each is its own collection so the
+// admin panel can add/remove cards freely, not just edit a fixed count.
+// Only runs if the new collection is still empty, so a real edit made after
+// migrating once can never be overwritten.
+async function migrateFixedSiteContentCards(prefix, count, collectionName) {
+  var existingSnap = await getDocs(collection(db, collectionName));
+  if (!existingSnap.empty) return;
+
+  var siteSnap = await getDoc(doc(db, 'siteContent', 'main'));
+  if (!siteSnap.exists()) return;
+  var content = siteSnap.data();
+
+  var batch = writeBatch(db);
+  var wrote = false;
+  for (var i = 1; i <= count; i++) {
+    var title = content[prefix + i + 'Title'];
+    if (!title) continue;
+    var ref = doc(collection(db, collectionName));
+    batch.set(ref, {
+      emoji: content[prefix + i + 'Emoji'] || '',
+      title: title,
+      desc: content[prefix + i + 'Desc'] || '',
+      order: i
+    });
+    wrote = true;
+  }
+  if (wrote) await batch.commit();
+}
+
+// Daily specials used to be one doc per day (dailySpecials/{day}, a single
+// {item, promo, imageUrl}) — now each day is a subcollection of specials
+// (dailySpecials/{day}/items/{id}) so more than one can be featured on the
+// same day and specials can be added/removed freely. Migrates the existing
+// single special into the new subcollection as its first item, per day,
+// only if that day's subcollection is still empty.
+async function migrateDailySpecialsIfNeeded() {
+  for (var i = 0; i < DAY_KEYS.length; i++) {
+    var day = DAY_KEYS[i];
+    var itemsSnap = await getDocs(collection(db, 'dailySpecials', day, 'items'));
+    if (!itemsSnap.empty) continue;
+
+    var daySnap = await getDoc(doc(db, 'dailySpecials', day));
+    if (!daySnap.exists()) continue;
+    var data = daySnap.data();
+    if (!data.item || !data.promo) continue;
+
+    await addDoc(collection(db, 'dailySpecials', day, 'items'), {
+      item: data.item,
+      promo: data.promo,
+      imageUrl: data.imageUrl || '',
+      order: 1
+    });
+  }
+}
+
 async function loadEverything() {
   await fillMissingContentDefaults();
+  await migrateFixedSiteContentCards('fanFav', 4, 'fanFavourites');
+  await migrateFixedSiteContentCards('value', 3, 'valueCards');
+  await migrateDailySpecialsIfNeeded();
   await loadMenuEditor();
   await loadContentEditor();
   await loadBusinessEditor();
   await loadSpecialsEditor();
+  await loadFanFavEditor();
+  await loadValueCardEditor();
 }
 
 // ---------- Menu editor ----------
@@ -338,19 +399,7 @@ var CONTENT_GROUPS = [
     title: 'Home — Fan Favourites',
     fields: [
       { key: 'fanFavHeading', label: 'Section Heading', type: 'input' },
-      { key: 'fanFavSub', label: 'Section Subtext', type: 'textarea' },
-      { key: 'fanFav1Emoji', label: 'Card 1 — Emoji', type: 'input' },
-      { key: 'fanFav1Title', label: 'Card 1 — Title', type: 'input' },
-      { key: 'fanFav1Desc', label: 'Card 1 — Description', type: 'textarea' },
-      { key: 'fanFav2Emoji', label: 'Card 2 — Emoji', type: 'input' },
-      { key: 'fanFav2Title', label: 'Card 2 — Title', type: 'input' },
-      { key: 'fanFav2Desc', label: 'Card 2 — Description', type: 'textarea' },
-      { key: 'fanFav3Emoji', label: 'Card 3 — Emoji', type: 'input' },
-      { key: 'fanFav3Title', label: 'Card 3 — Title', type: 'input' },
-      { key: 'fanFav3Desc', label: 'Card 3 — Description', type: 'textarea' },
-      { key: 'fanFav4Emoji', label: 'Card 4 — Emoji', type: 'input' },
-      { key: 'fanFav4Title', label: 'Card 4 — Title', type: 'input' },
-      { key: 'fanFav4Desc', label: 'Card 4 — Description', type: 'textarea' }
+      { key: 'fanFavSub', label: 'Section Subtext', type: 'textarea' }
     ]
   },
   {
@@ -384,20 +433,6 @@ var CONTENT_GROUPS = [
       { key: 'aboutBelieve', label: '"What We Believe" Paragraph', type: 'textarea' },
       { key: 'takeawayDoneRightHeading', label: '"Takeaway, Done Right" Heading', type: 'input' },
       { key: 'aboutTakeaway', label: '"Takeaway, Done Right" Paragraph', type: 'textarea' }
-    ]
-  },
-  {
-    title: 'About — Value Cards',
-    fields: [
-      { key: 'value1Emoji', label: 'Card 1 — Emoji', type: 'input' },
-      { key: 'value1Title', label: 'Card 1 — Title', type: 'input' },
-      { key: 'value1Desc', label: 'Card 1 — Description', type: 'textarea' },
-      { key: 'value2Emoji', label: 'Card 2 — Emoji', type: 'input' },
-      { key: 'value2Title', label: 'Card 2 — Title', type: 'input' },
-      { key: 'value2Desc', label: 'Card 2 — Description', type: 'textarea' },
-      { key: 'value3Emoji', label: 'Card 3 — Emoji', type: 'input' },
-      { key: 'value3Title', label: 'Card 3 — Title', type: 'input' },
-      { key: 'value3Desc', label: 'Card 3 — Description', type: 'textarea' }
     ]
   },
   {
@@ -469,6 +504,123 @@ async function saveContentGroup(groupEl) {
   }
 }
 
+// ---------- Card collections (Fan Favourites, Value Cards) ----------
+
+// Both are the exact same shape (emoji + title + description, freely
+// add/remove) so one factory builds both editors instead of duplicating
+// identical CRUD logic twice.
+function makeCardCollectionEditor(collectionName, editorElId) {
+  async function load() {
+    var editor = document.getElementById(editorElId);
+    var snap = await getDocs(query(collection(db, collectionName), orderBy('order')));
+    var cards = [];
+    snap.forEach(function (d) { cards.push(Object.assign({ id: d.id }, d.data())); });
+
+    editor.innerHTML = cards.map(renderRow).join('') + renderAddRow();
+
+    editor.querySelectorAll('[data-action="save-item"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { saveRow(btn.closest('.admin-item-row')); });
+    });
+    editor.querySelectorAll('[data-action="delete-item"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { deleteRow(btn.closest('.admin-item-row')); });
+    });
+    editor.querySelectorAll('[data-action="add-item"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { addRow(btn.closest('.admin-add-item')); });
+    });
+  }
+
+  function renderRow(card) {
+    return (
+      '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 2fr auto;" data-item-id="' + card.id + '">' +
+        '<input type="text" data-field="emoji" value="' + escapeAttr(card.emoji || '') + '" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
+        '<input type="text" data-field="title" value="' + escapeAttr(card.title || '') + '" placeholder="Title">' +
+        '<textarea data-field="desc" placeholder="Description">' + (card.desc || '') + '</textarea>' +
+        '<div class="admin-item-actions">' +
+          '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
+          '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderAddRow() {
+    return (
+      '<div class="admin-add-item" style="grid-template-columns: 56px 1fr auto;">' +
+        '<input type="text" data-field="emoji" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
+        '<input type="text" data-field="title" placeholder="New card title">' +
+        '<button class="admin-btn admin-btn-primary" type="button" data-action="add-item">Add Card</button>' +
+      '</div>'
+    );
+  }
+
+  async function saveRow(row) {
+    var id = row.dataset.itemId;
+    var emoji = row.querySelector('[data-field="emoji"]').value.trim();
+    var title = row.querySelector('[data-field="title"]').value.trim();
+    var desc = row.querySelector('[data-field="desc"]').value.trim();
+
+    if (!title) {
+      showToast('Title is required');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, collectionName, id), { emoji: emoji, title: title, desc: desc });
+      showToast('Card saved');
+    } catch (err) {
+      console.error(err);
+      showToast('Could not save — try again');
+    }
+  }
+
+  async function deleteRow(row) {
+    if (!confirm('Delete this card permanently?')) return;
+    var id = row.dataset.itemId;
+    try {
+      await deleteDoc(doc(db, collectionName, id));
+      row.remove();
+      showToast('Card deleted');
+    } catch (err) {
+      console.error(err);
+      showToast('Could not delete — try again');
+    }
+  }
+
+  async function addRow(addRowEl) {
+    var emoji = addRowEl.querySelector('[data-field="emoji"]').value.trim();
+    var title = addRowEl.querySelector('[data-field="title"]').value.trim();
+
+    if (!title) {
+      showToast('Title is required');
+      return;
+    }
+
+    try {
+      var snap = await getDocs(collection(db, collectionName));
+      var maxOrder = 0;
+      snap.forEach(function (d) {
+        var order = d.data().order || 0;
+        if (order > maxOrder) maxOrder = order;
+      });
+
+      await addDoc(collection(db, collectionName), { emoji: emoji, title: title, desc: '', order: maxOrder + 1 });
+      showToast('Card added');
+      load();
+    } catch (err) {
+      console.error(err);
+      showToast('Could not add — try again');
+    }
+  }
+
+  return { load: load };
+}
+
+var fanFavEditor = makeCardCollectionEditor('fanFavourites', 'fanFavEditor');
+var valueCardEditor = makeCardCollectionEditor('valueCards', 'valueCardsEditor');
+
+function loadFanFavEditor() { return fanFavEditor.load(); }
+function loadValueCardEditor() { return valueCardEditor.load(); }
+
 // ---------- Business info editor ----------
 
 var BUSINESS_FIELDS = [
@@ -530,51 +682,101 @@ async function saveBusinessInfo() {
 }
 
 // ---------- Daily specials editor ----------
+// Each day can now have any number of specials (dailySpecials/{day}/items),
+// not just one — add/remove freely, same CRUD shape as menu items, grouped
+// by the six fixed weekday "categories" (no Sunday — shop is closed).
+
+async function fetchDailySpecials() {
+  var byDay = {};
+  for (var i = 0; i < DAY_KEYS.length; i++) {
+    var day = DAY_KEYS[i];
+    var snap = await getDocs(query(collection(db, 'dailySpecials', day, 'items'), orderBy('order')));
+    var items = [];
+    snap.forEach(function (d) { items.push(Object.assign({ id: d.id }, d.data())); });
+    byDay[day] = items;
+  }
+  return byDay;
+}
+
+function renderSpecialRow(day, special) {
+  var photo = special.imageUrl
+    ? '<img src="' + escapeAttr(special.imageUrl) + '" class="admin-item-photo" alt="">'
+    : '<div class="admin-item-photo"></div>';
+  var fileId = 'special-photo-' + day + '-' + special.id;
+
+  return (
+    '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr auto;" data-day="' + day + '" data-item-id="' + special.id + '">' +
+      '<div>' +
+        photo +
+        '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
+        '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
+      '</div>' +
+      '<input type="text" data-field="item" value="' + escapeAttr(special.item || '') + '" placeholder="Item name">' +
+      '<input type="text" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off">' +
+      '<div class="admin-item-actions">' +
+        '<button class="admin-btn admin-btn-primary" type="button" data-action="save-special">Save</button>' +
+        '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-special">Delete</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function renderAddSpecialRow(day) {
+  return (
+    '<div class="admin-add-item" style="grid-template-columns: 1fr 1fr auto;" data-day="' + day + '">' +
+      '<input type="text" data-field="item" placeholder="New item name">' +
+      '<input type="text" data-field="promo" placeholder="e.g. 10% off">' +
+      '<button class="admin-btn admin-btn-primary" type="button" data-action="add-special">Add Special</button>' +
+    '</div>'
+  );
+}
 
 async function loadSpecialsEditor() {
   var editor = document.getElementById('specialsEditor');
-  var rows = await Promise.all(DAY_KEYS.map(async function (key) {
-    var snap = await getDoc(doc(db, 'dailySpecials', key));
-    var data = snap.exists() ? snap.data() : { item: '', promo: '', imageUrl: '' };
-    return { key: key, item: data.item || '', promo: data.promo || '', imageUrl: data.imageUrl || '' };
-  }));
+  var byDay = await fetchDailySpecials();
 
-  editor.innerHTML = rows.map(function (r) {
-    var photo = r.imageUrl
-      ? '<img src="' + escapeAttr(r.imageUrl) + '" class="admin-item-photo" alt="">'
-      : '<div class="admin-item-photo"></div>';
-    var fileId = 'special-photo-' + r.key;
+  editor.innerHTML = DAY_KEYS.map(function (day) {
+    var specials = byDay[day] || [];
+    var rowsHtml = specials.length
+      ? specials.map(function (s) { return renderSpecialRow(day, s); }).join('')
+      : '<p class="admin-hint" style="margin:8px 0;">No specials set for ' + DAY_LABELS[day] + ' yet.</p>';
 
     return (
-      '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 1fr auto;" data-day="' + r.key + '">' +
-        '<div>' +
-          photo +
-          '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
-          '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
-        '</div>' +
-        '<strong>' + DAY_LABELS[r.key] + '</strong>' +
-        '<input type="text" data-field="item" value="' + escapeAttr(r.item) + '" placeholder="Item name">' +
-        '<input type="text" data-field="promo" value="' + escapeAttr(r.promo) + '" placeholder="e.g. 10% off">' +
-        '<button class="admin-btn admin-btn-primary" type="button" data-action="save-special">Save</button>' +
+      '<div class="admin-category">' +
+        '<div class="admin-category-header"><h3 style="margin:0;">' + DAY_LABELS[day] + '</h3></div>' +
+        rowsHtml +
+        renderAddSpecialRow(day) +
       '</div>'
     );
   }).join('');
 
   editor.querySelectorAll('[data-action="save-special"]').forEach(function (btn) {
-    btn.addEventListener('click', function () { saveSpecial(btn.closest('[data-day]')); });
+    btn.addEventListener('click', function () { saveSpecial(btn.closest('.admin-item-row')); });
+  });
+  editor.querySelectorAll('[data-action="delete-special"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { deleteSpecial(btn.closest('.admin-item-row')); });
   });
   editor.querySelectorAll('[data-action="upload-special-photo"]').forEach(function (input) {
     input.addEventListener('change', function () { uploadSpecialPhoto(input); });
+  });
+  editor.querySelectorAll('[data-action="add-special"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { addSpecial(btn.closest('.admin-add-item')); });
   });
 }
 
 async function saveSpecial(row) {
   var day = row.dataset.day;
+  var id = row.dataset.itemId;
   var item = row.querySelector('[data-field="item"]').value.trim();
   var promo = row.querySelector('[data-field="promo"]').value.trim();
 
+  if (!item || !promo) {
+    showToast('Item name and promo are both required');
+    return;
+  }
+
   try {
-    await setDoc(doc(db, 'dailySpecials', day), { item: item, promo: promo }, { merge: true });
+    await updateDoc(doc(db, 'dailySpecials', day, 'items', id), { item: item, promo: promo });
     showToast(DAY_LABELS[day] + "'s special saved");
   } catch (err) {
     console.error(err);
@@ -582,11 +784,53 @@ async function saveSpecial(row) {
   }
 }
 
+async function deleteSpecial(row) {
+  if (!confirm('Delete this special permanently?')) return;
+  var day = row.dataset.day;
+  var id = row.dataset.itemId;
+  try {
+    await deleteDoc(doc(db, 'dailySpecials', day, 'items', id));
+    showToast('Special deleted');
+    loadSpecialsEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not delete — try again');
+  }
+}
+
+async function addSpecial(addRowEl) {
+  var day = addRowEl.dataset.day;
+  var item = addRowEl.querySelector('[data-field="item"]').value.trim();
+  var promo = addRowEl.querySelector('[data-field="promo"]').value.trim();
+
+  if (!item || !promo) {
+    showToast('Item name and promo are both required');
+    return;
+  }
+
+  try {
+    var snap = await getDocs(collection(db, 'dailySpecials', day, 'items'));
+    var maxOrder = 0;
+    snap.forEach(function (d) {
+      var order = d.data().order || 0;
+      if (order > maxOrder) maxOrder = order;
+    });
+
+    await addDoc(collection(db, 'dailySpecials', day, 'items'), { item: item, promo: promo, imageUrl: '', order: maxOrder + 1 });
+    showToast('Special added to ' + DAY_LABELS[day]);
+    loadSpecialsEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not add — try again');
+  }
+}
+
 async function uploadSpecialPhoto(input) {
   var file = input.files[0];
   if (!file) return;
-  var row = input.closest('[data-day]');
+  var row = input.closest('.admin-item-row');
   var day = row.dataset.day;
+  var id = row.dataset.itemId;
 
   showToast('Uploading photo…');
   try {
@@ -602,7 +846,7 @@ async function uploadSpecialPhoto(input) {
     var result = await res.json();
     var url = optimizedCloudinaryUrl(result.secure_url);
 
-    await setDoc(doc(db, 'dailySpecials', day), { imageUrl: url }, { merge: true });
+    await updateDoc(doc(db, 'dailySpecials', day, 'items', id), { imageUrl: url });
 
     var img = row.querySelector('.admin-item-photo');
     if (img.tagName === 'IMG') {
@@ -646,11 +890,21 @@ seedBtn.addEventListener('click', async function () {
       });
     });
 
+    FAN_FAVOURITES.forEach(function (card) {
+      batch.set(doc(collection(db, 'fanFavourites')), card);
+    });
+
+    VALUE_CARDS.forEach(function (card) {
+      batch.set(doc(collection(db, 'valueCards')), card);
+    });
+
     batch.set(doc(db, 'siteContent', 'main'), SITE_CONTENT);
     batch.set(doc(db, 'businessInfo', 'main'), BUSINESS_INFO);
 
     Object.keys(DAILY_SPECIALS).forEach(function (day) {
-      batch.set(doc(db, 'dailySpecials', day), DAILY_SPECIALS[day]);
+      DAILY_SPECIALS[day].forEach(function (special) {
+        batch.set(doc(collection(db, 'dailySpecials', day, 'items')), special);
+      });
     });
 
     await batch.commit();
