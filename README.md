@@ -134,6 +134,10 @@ To force a cache reset after a future change to what gets precached, bump `CACHE
 - **Reviews section**: still just links out to Google ("Read Our Reviews" / "Leave A Review") rather than showing real review quotes on the page — needs actual customer reviews picked before adding, not something to fabricate.
 - **OG share image**: `images/og-image.png` is logo-only (no real food photo exists yet) — worth swapping for a real hero food shot once photography is done.
 
+## Automated checks
+
+`.github/workflows/checks.yml` runs on every push/PR to `main`: JS syntax check on every file in `js/` + `sw.js`, and `scripts/check_site.py` (broken internal `href`/`src` references, `site.webmanifest`/JSON-LD/`sitemap.xml` well-formedness). Deliberately scoped to zero-noise checks — no generic HTML linter, since this project intentionally uses patterns (inline `style` attributes, etc.) that a strict default linter config would flag as style nitpicks rather than real problems. A failure here always means something worth fixing, never something to argue with or suppress. Run it locally any time with `python3 scripts/check_site.py`.
+
 ## Deploying
 
 Already live on GitHub Pages (see top of this file) — push to `main` and it redeploys automatically within a minute or two. The Firebase project and Cloudinary account have no separate deploy step — changes via the admin panel (or the Firebase/Cloudinary consoles directly) take effect immediately, live.

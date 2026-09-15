@@ -1,0 +1,29 @@
+name: Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check JS syntax
+        run: |
+          status=0
+          for f in $(find js -name '*.js') sw.js; do
+            echo "Checking $f"
+            node --check "$f" || status=1
+          done
+          exit $status
+
+      - name: Check links, manifest, JSON-LD, sitemap
+        run: python3 scripts/check_site.py
