@@ -63,3 +63,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 1200);
   }
 });
+
+// Caches the static shell (HTML/CSS/JS/images) for instant repeat loads and
+// basic offline browsing — never the live Firestore data (menu, specials,
+// open/closed status), which always comes fresh from network. Registered
+// after 'load' so it doesn't compete with the page's own initial resources.
+// admin.html doesn't load this file, so the admin panel is never controlled
+// by this service worker.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      console.error('Service worker registration failed', err);
+    });
+  });
+}

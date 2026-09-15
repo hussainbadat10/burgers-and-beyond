@@ -19,6 +19,8 @@ privacy.html    Plain-language privacy/cookies page, linked from every footer
 robots.txt      Allows crawling, disallows /admin.html, points to sitemap.xml
 sitemap.xml     Lists the public pages for search engines
 site.webmanifest  "Add to Home Screen" metadata (name, icons, theme color)
+sw.js           Service worker — caches the static shell for offline/repeat
+                loads, never the live Firestore data (see below)
 css/style.css   Shared styles (site + admin)
 js/script.js       Mobile nav toggle + active-link highlighting + scroll-reveal
 js/cart.js         Order cart (localStorage) + WhatsApp checkout
@@ -108,6 +110,22 @@ Google Analytics (GA4, measurement ID `G-RYYWS16PFL`) is wired up in `js/analyti
 - **Why gate it at all**: GA4 sets tracking cookies, and South Africa's POPIA (similar to GDPR) generally expects consent before that happens — so this only ever tracks visitors who said yes.
 - `privacy.html` (linked from every footer) explains this in plain language — what's tracked, what isn't, and how to reset the choice.
 - The floating cart button and menu page's "back to top" button both shift up automatically while the cookie banner is showing (`--cookie-banner-offset` CSS variable, set in `js/analytics.js`) so nothing overlaps at any screen size.
+
+## Menu search
+
+The menu's search box (`#menuSearch` in `menu.html`, logic in `js/menu-loader.js`) filters items by name and description as you type. The sidebar hides while a search is active (category navigation doesn't apply to a filtered list) and reappears when the search is cleared. Filtering uses a dedicated `.menu-search-hide { display: none !important }` class rather than the `[hidden]` attribute — `.menu-item` and `.menu-sidebar` both set their own `display`, which silently overrides the browser's default `[hidden]` behavior (the same bug class as the promo-photo fix earlier in this file's history).
+
+## Offline support (service worker)
+
+`sw.js` caches the static shell — every public HTML page, `css/style.css`, the public JS files, and the icon/logo images — for instant repeat loads and basic offline browsing. Registered from `js/script.js` after `window.load`, so it never competes with a page's own initial load, and never runs on `admin.html` (which doesn't include that script).
+
+**Deliberately never caches Firestore data.** The menu, daily specials, and "Open Now" badge always fetch fresh from the network; if there's genuinely no connection, the page just shows its existing "menu is loading" fallback rather than risking stale prices or a wrong open/closed status being shown as if it were current.
+
+**Two caching strategies, chosen to avoid the classic "stuck on an old version" service-worker failure mode:**
+- **HTML pages**: network-first. A visitor with a connection always gets the latest deploy; the cached copy is only ever used as an offline fallback. Verified directly — edited a page, reloaded while "online" in a test, confirmed the fresh content won and the cache updated to match (not the reverse).
+- **CSS/JS/images**: stale-while-revalidate — instant paint from cache, with a background refetch on every load so the cache is never more than one visit stale.
+
+To force a cache reset after a future change to what gets precached, bump `CACHE_NAME` in `sw.js` (currently `bnb-shell-v1`) — the old cache is deleted automatically on activate.
 
 ## Still placeholder — replace once real content is decided
 
