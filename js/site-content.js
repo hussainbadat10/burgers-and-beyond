@@ -9,9 +9,20 @@
 //   data-content-phone-key="fieldName"  sets el.dataset.phone (for cart.js's WhatsApp buttons)
 //   data-content-map="1"                builds a Google Maps embed src from
 //                                       addressLine1 + addressLine2 (contact.html only)
+//   data-sep-for="fieldName"            a separator (e.g. ", ") next to a
+//                                       data-content-key element, hidden
+//                                       together with it when that field is
+//                                       intentionally blanked out (see below)
 //
-// Falls back to the page's existing static content if a field has no value
-// yet, or if the fetch fails entirely — the page always reads correctly.
+// Falls back to the page's existing static content if a field has never
+// been set (the key doesn't exist in Firestore at all yet), or if the fetch
+// fails entirely — the page always reads correctly. But if the admin has
+// actively edited a field to be blank (the key exists, with an empty
+// value — e.g. removing a "Line 2" that doesn't apply), that's respected:
+// the element's text is cleared AND the element itself is hidden, rather
+// than silently keeping the old static text forever because an empty
+// string reads as falsy. That distinction (key missing vs. key present but
+// empty) is exactly what this always checks via `key in content`.
 //
 // Two containers get card-collection rendering instead of simple text
 // substitution, since the admin panel needs to add/remove cards, not just
@@ -76,18 +87,32 @@ document.addEventListener('DOMContentLoaded', async function () {
       bizSnap.exists() ? bizSnap.data() : {}
     );
 
+    function setSepHidden(key, hide) {
+      var sep = document.querySelector('[data-sep-for="' + key + '"]');
+      if (sep) sep.hidden = hide;
+    }
+
     document.querySelectorAll('[data-content-key]').forEach(function (el) {
       var key = el.getAttribute('data-content-key');
-      if (content[key]) el.textContent = content[key];
+      if (!(key in content)) return; // never set — keep the static fallback text
+      el.textContent = content[key];
+      el.hidden = !content[key]; // set, but intentionally blank — hide the line entirely
+      setSepHidden(key, !content[key]);
     });
 
     document.querySelectorAll('[data-content-href-key]').forEach(function (el) {
       var key = el.getAttribute('data-content-href-key');
-      if (content[key]) el.setAttribute('href', content[key]);
+      if (!(key in content)) return;
+      if (content[key]) {
+        el.setAttribute('href', content[key]);
+      } else {
+        el.hidden = true;
+      }
     });
 
     document.querySelectorAll('[data-content-phone-key]').forEach(function (el) {
       var key = el.getAttribute('data-content-phone-key');
+      if (!(key in content)) return;
       if (content[key]) el.setAttribute('data-phone', content[key]);
     });
 
