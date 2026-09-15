@@ -65,6 +65,18 @@ self.addEventListener('fetch', function (event) {
   // untouched, exactly as if this service worker didn't exist.
   if (url.origin !== self.location.origin || event.request.method !== 'GET') return;
 
+  // admin.html sits in the same directory as everything else, so this
+  // service worker's scope (and clients.claim()) unavoidably covers it too
+  // once a visitor has loaded any other page first — navigator.serviceWorker
+  // .controller will be non-null there even though admin.html never
+  // registers this file itself. That's harmless as long as its own
+  // requests are never actually cached or served from cache, which this
+  // guard guarantees: real network, every time, no exceptions.
+  var isAdminRequest = url.pathname.endsWith('/admin.html') ||
+    url.pathname.endsWith('/js/admin.js') ||
+    url.pathname.endsWith('/js/seed-data.js');
+  if (isAdminRequest) return;
+
   if (event.request.mode === 'navigate') {
     // HTML pages: always prefer a fresh network copy while online, so a
     // returning visitor never gets stuck on a stale page after a deploy.

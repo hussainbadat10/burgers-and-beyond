@@ -117,7 +117,9 @@ The menu's search box (`#menuSearch` in `menu.html`, logic in `js/menu-loader.js
 
 ## Offline support (service worker)
 
-`sw.js` caches the static shell — every public HTML page, `css/style.css`, the public JS files, and the icon/logo images — for instant repeat loads and basic offline browsing. Registered from `js/script.js` after `window.load`, so it never competes with a page's own initial load, and never runs on `admin.html` (which doesn't include that script).
+`sw.js` caches the static shell — every public HTML page, `css/style.css`, the public JS files, and the icon/logo images — for instant repeat loads and basic offline browsing. Registered from `js/script.js` after `window.load`, so it never competes with a page's own initial load.
+
+**`admin.html` is explicitly excluded in the fetch handler itself, not just by omission.** `admin.html` doesn't load `js/script.js`, but that alone isn't enough: this service worker's scope covers the whole site (it lives at the repo root), and `clients.claim()` in the `activate` handler means it takes control of *every* same-origin page — including `admin.html` — the moment a visitor has loaded any other page first, regardless of whether `admin.html` ever registered it itself. `navigator.serviceWorker.controller` being non-null there is unavoidable and harmless; what actually matters is that `admin.html`, `js/admin.js`, and `js/seed-data.js` are never cached or served from cache — the fetch handler bypasses them by URL before any caching logic runs, verified by confirming `fromServiceWorker: false` on every response for both files, on first load and reload, after first visiting the homepage (the realistic order any real owner would hit).
 
 **Deliberately never caches Firestore data.** The menu, daily specials, and "Open Now" badge always fetch fresh from the network; if there's genuinely no connection, the page just shows its existing "menu is loading" fallback rather than risking stale prices or a wrong open/closed status being shown as if it were current.
 
