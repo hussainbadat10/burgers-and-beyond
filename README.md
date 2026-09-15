@@ -13,6 +13,11 @@ menu.html       Full menu — loaded live from Firestore, sticky category sideba
 about.html      Restaurant story — hero, story paragraphs, value cards, CTA: all editable
 contact.html    Phone, address, hours, map — all editable via admin
 admin.html      Password-protected admin panel (menu, photos, site text, business info, daily specials)
+404.html        Branded not-found page (GitHub Pages serves this automatically
+                for any unmatched URL)
+robots.txt      Allows crawling, disallows /admin.html, points to sitemap.xml
+sitemap.xml     Lists the 4 public pages for search engines
+site.webmanifest  "Add to Home Screen" metadata (name, icons, theme color)
 css/style.css   Shared styles (site + admin)
 js/script.js       Mobile nav toggle + active-link highlighting + scroll-reveal
 js/cart.js         Order cart (localStorage) + WhatsApp checkout
@@ -52,7 +57,13 @@ images/         Logo + real photos go here (see below)
 
 - **Palette**: black (`#141414`), cheese yellow (`#ffd400`), and a blue accent (`#2f8fe0`) taken from the "N" in the logo — yellow appears on dark surfaces (header, footer, hero, buttons), blue appears on light surfaces (eyebrows, prices, hover states).
 - **Type**: 'Luckiest Guy' for the hero headline and nav wordmark (matches the logo's bold sticker-style lettering), 'Baloo 2' for other headings, 'Inter' for body text — all via Google Fonts.
-- **Logo**: `images/logo.png` is the full circular badge (background removed from the original `images/BNB logo.jpeg`, kept as the source). It's only legible at large sizes, so the nav/footer use `images/icon.png` instead — a square crop of just the burger mark from the same badge, paired with the text wordmark. `images/favicon.png` is the same burger-mark crop, set as the browser tab icon in every page's `<head>`.
+- **Logo**: `images/logo.png` is the full circular badge (background removed from the original `images/BNB logo.jpeg`, kept as the source). It's only legible at large sizes, so the nav/footer use `images/icon.png` instead — a square crop of just the burger mark from the same badge, paired with the text wordmark. `images/favicon.png` is the same burger-mark crop, set as the browser tab icon in every page's `<head>`. `images/apple-touch-icon.png` (180×180) and `images/icon-192.png` are resized copies of the same crop for "Add to Home Screen".
+
+## SEO & link sharing
+
+- Every public page has Open Graph + Twitter Card meta tags, so pasting a link into WhatsApp/Facebook/iMessage unfurls into a branded card instead of a bare link — the image used is `images/og-image.png` (1200×630, generated from the logo + brand colours, not a real food photo since none exist yet — swap it for a real hero shot once photos are in).
+- `index.html` carries `schema.org/Restaurant` JSON-LD (address, phone, hours, price range, cuisine) built entirely from the real business info already in this README — update it if any of those facts change.
+- `robots.txt` + `sitemap.xml` cover the 4 public pages; `admin.html` is excluded from both and already carries `noindex, nofollow`.
 
 ## Running locally
 
@@ -81,6 +92,8 @@ Editing any of the above in the admin panel updates every place it appears, site
 
 - **Menu items, prices & photos**: seeded from the physical menu boards (see `js/seed-data.js`) with no photos yet — add real food photos per item via the admin panel's "Change photo" upload.
 - **Daily specials**: seeded with example promotions (real items, made-up discounts) — replace via the admin panel's Daily Specials tab once real weekly promotions are decided (photos can be added there too now).
+- **Reviews section**: still just links out to Google ("Read Our Reviews" / "Leave A Review") rather than showing real review quotes on the page — needs actual customer reviews picked before adding, not something to fabricate.
+- **OG share image**: `images/og-image.png` is logo-only (no real food photo exists yet) — worth swapping for a real hero food shot once photography is done.
 
 ## Deploying
 

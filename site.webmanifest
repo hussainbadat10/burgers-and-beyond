@@ -1,0 +1,13 @@
+{
+  "name": "Burgers N Beyond",
+  "short_name": "Burgers N Beyond",
+  "description": "Flame-grilled takeaway burgers, gatsbys, kotas and more in Randfontein.",
+  "start_url": "/burgers-and-beyond/index.html",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#141414",
+  "icons": [
+    { "src": "images/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "images/favicon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

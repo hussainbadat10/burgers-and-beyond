@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://hussainbadat10.github.io/burgers-and-beyond/sitemap.xml
