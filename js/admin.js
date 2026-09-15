@@ -476,6 +476,12 @@ var BUSINESS_FIELDS = [
   { key: 'hoursMonSat', label: 'Hours — Mon–Sat line', type: 'input' },
   { key: 'hoursFri', label: 'Hours — Friday closure line', type: 'input' },
   { key: 'hoursSun', label: 'Hours — Sunday line', type: 'input' },
+  { key: 'hoursMonSatOpenTime', label: 'Live "Open Now" badge — Mon–Sat opens at', type: 'time' },
+  { key: 'hoursMonSatCloseTime', label: 'Live "Open Now" badge — Mon–Sat closes at', type: 'time' },
+  { key: 'hoursFriOpenTime1', label: 'Live "Open Now" badge — Friday opens at (morning)', type: 'time' },
+  { key: 'hoursFriCloseTime1', label: 'Live "Open Now" badge — Friday closes at (before break)', type: 'time' },
+  { key: 'hoursFriOpenTime2', label: 'Live "Open Now" badge — Friday reopens at (afternoon)', type: 'time' },
+  { key: 'hoursFriCloseTime2', label: 'Live "Open Now" badge — Friday closes at (evening)', type: 'time' },
   { key: 'emailText', label: 'Email — Display Text', type: 'input' },
   { key: 'emailHref', label: 'Email — Link (e.g. mailto:you@example.com)', type: 'input' },
   { key: 'mrdHref', label: 'Mr D Food Link', type: 'input' },
@@ -490,7 +496,8 @@ async function loadBusinessEditor() {
   editor.innerHTML =
     BUSINESS_FIELDS.map(function (f) {
       var value = content[f.key] || '';
-      return '<div class="admin-field"><label>' + f.label + '</label><input type="text" data-field="' + f.key + '" value="' + escapeAttr(value) + '"></div>';
+      var inputType = f.type === 'time' ? 'time' : 'text';
+      return '<div class="admin-field"><label>' + f.label + '</label><input type="' + inputType + '" data-field="' + f.key + '" value="' + escapeAttr(value) + '"></div>';
     }).join('') +
     '<button id="saveBusinessBtn" class="btn btn-primary" type="button">Save Business Info</button>';
 

@@ -28,6 +28,8 @@ js/promo.js        Daily special banner, reads today's slot from Firestore
 js/site-content.js Fills [data-content-key]/[data-content-href-key]/
                     [data-content-phone-key]/[data-content-map] elements from
                     Firestore (siteContent/main + businessInfo/main)
+js/store-status.js Live "Open Now / Closed" badge — computed client-side each
+                    minute from businessInfo's structured hours*Time fields
 js/seed-data.js    One-time starter data (the original real menu/text/business
                     info), used by admin.html's "Import Starter Data" button
 js/admin.js        Admin panel logic (auth, CRUD, photo upload, seeding)
@@ -44,7 +46,7 @@ images/         Logo + real photos go here (see below)
 - `menuCategories/{categoryId}` — `name`, `emoji`, `note`, `order`, optional `comboCallout` (HTML string) and `dividerBefore` ({eyebrow, title, note} — used once, before "Streetbox Meals", to render the "Sharing Meals" section divider)
 - `menuItems/{itemId}` (auto-id) — `categoryId`, `name`, `price` (number), `description`, `imageUrl` (a Cloudinary URL), `order`
 - `siteContent/main` (single doc) — every heading/paragraph/card across Home, Menu, About, and Contact's hero sections, plus the shared footer tagline. See `js/admin.js`'s `CONTENT_GROUPS` for the full field list (grouped by page/section in the admin UI). Deliberately excludes nav labels, button action text, and the cart's EFT/payment warning — those stay fixed in code since they're tied to specific behavior, not just marketing copy.
-- `businessInfo/main` (single doc) — phone numbers (display text + tel: link + WhatsApp digits), address (two lines), Google Maps/review links, opening hours (3 lines), email (display text + mailto: link), Mr D Food link, Instagram link. Centralized here specifically because these repeat across the nav, footer, info strip, and contact page on every load — editing one field updates every instance. See `js/admin.js`'s `BUSINESS_FIELDS`.
+- `businessInfo/main` (single doc) — phone numbers (display text + tel: link + WhatsApp digits), address (two lines), Google Maps/review links, opening hours (3 display lines + 6 structured `hours*Time` fields, see below), email (display text + mailto: link), Mr D Food link, Instagram link. Centralized here specifically because these repeat across the nav, footer, info strip, and contact page on every load — editing one field updates every instance. See `js/admin.js`'s `BUSINESS_FIELDS`.
 - `dailySpecials/{monday..saturday}` (no `sunday` — shop is closed) — `item`, `promo`
 
 **Security rules** (Firestore only): public read, write requires `request.auth != null`. Since there's only one admin account, that's sufficient — no roles/claims needed. Rules aren't stored in this repo; they're set directly in the Firebase console (Firestore Database → Rules). The wildcard rule (`match /{document=**}`) already covers new collections like `businessInfo` with no changes needed.
@@ -87,6 +89,14 @@ The Firebase-backed pages (menu, admin, and the editable text on home/about) nee
 - **Opening hours**: Mon–Sat 10:00–18:30, closed Fridays 12:20–13:20, closed Sundays
 
 Editing any of the above in the admin panel updates every place it appears, site-wide — no code changes needed.
+
+## Live "Open Now / Closed" badge
+
+Shows next to the "Opening Hours" heading on the home page and contact page (`js/store-status.js`), computed client-side from real time — no server/cron needed. Recomputes every 60 seconds so it flips automatically right at opening/closing time, and shows a detail line ("Closes at 6:30PM" / "Opens tomorrow at 10AM" / "Opens today at 1:20PM" for Friday's midday break).
+
+Deliberately reads a **separate set of structured fields**, not the free-text `hoursMonSat`/`hoursFri`/`hoursSun` display lines: `hoursMonSatOpenTime`, `hoursMonSatCloseTime`, `hoursFriOpenTime1`, `hoursFriCloseTime1`, `hoursFriOpenTime2`, `hoursFriCloseTime2` (all `HH:MM` 24-hour, edited via native time pickers in the admin panel's Business Info tab). Keeping these separate from the display text means editing the wording of the hours (e.g. rephrasing the Friday line) can never silently break the badge, and vice versa.
+
+**One-time activation step:** these 6 fields didn't exist in the live database before this feature shipped, and there's no way to backfill them without real admin credentials — they'll appear automatically (via `fillMissingContentDefaults()`) the **next time the owner logs into `/admin.html`**, pre-filled with the current real hours. Until then, the badge silently stays hidden rather than showing anything — it never guesses.
 
 ## Still placeholder — replace once real content is decided
 

@@ -208,6 +208,12 @@ export const BUSINESS_INFO = {
   hoursMonSat: 'Mon–Sat: 10:00 – 18:30',
   hoursFri: 'Fri: closed 12:20 – 13:20',
   hoursSun: 'Sun: Closed',
+  // Structured times below drive the live "Open Now / Closed" badge — kept
+  // separate from the free-text lines above so editing the display wording
+  // never breaks the badge, and vice versa.
+  hoursMonSatOpenTime: '10:00', hoursMonSatCloseTime: '18:30',
+  hoursFriOpenTime1: '10:00', hoursFriCloseTime1: '12:20',
+  hoursFriOpenTime2: '13:20', hoursFriCloseTime2: '18:30',
   emailText: 'Burgersnbeyondsa@gmail.com', emailHref: 'mailto:Burgersnbeyondsa@gmail.com',
   mrdHref: 'https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689',
   instagramHref: 'https://www.instagram.com/burgers._n_beyond/'
