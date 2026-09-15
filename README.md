@@ -8,7 +8,8 @@ Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant.
 
 ```
 index.html      Home page — hero, Fan Favourites, Reviews: all editable via admin
-menu.html       Full menu — loaded live from Firestore, collapsible by category
+menu.html       Full menu — loaded live from Firestore, sticky category sidebar
+                (horizontal chips on mobile) + a 2-column item grid
 about.html      Restaurant story — hero, story paragraphs, value cards, CTA: all editable
 contact.html    Phone, address, hours, map — all editable via admin
 admin.html      Password-protected admin panel (menu, photos, site text, business info, daily specials)
