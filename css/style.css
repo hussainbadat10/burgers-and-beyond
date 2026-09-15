@@ -9,7 +9,8 @@
   --color-dark-alt: #232323;
   --color-primary: #ffd400;
   --color-primary-dark: #e0b800;
-  --color-accent: #2f8fe0;
+  --color-accent: #2572b3;
+  --color-accent-on-dark: #2f8fe0;
   --color-text: #1a1a1a;
   --color-text-muted: #5c5a55;
   --color-white: #ffffff;
@@ -36,6 +37,12 @@ body {
   color: var(--color-text);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  /* Room for the fixed cookie banner while it's showing, so it can never
+     cover real page content sitting near the bottom of the viewport (e.g.
+     the menu search box on a short mobile screen) — not just the floating
+     buttons, which handle their own offset separately. */
+  padding-bottom: var(--cookie-banner-offset, 0px);
+  transition: padding-bottom 0.2s ease;
 }
 
 img {
@@ -222,7 +229,11 @@ p {
 }
 
 .nav-logo span {
-  color: var(--color-accent);
+  /* Sits on the dark header, not a light card/background like every other
+     accent-blue usage, so it keeps the lighter blue — the standard
+     --color-accent was darkened for contrast on light backgrounds, which
+     would make this fail contrast on dark instead. */
+  color: var(--color-accent-on-dark);
 }
 
 .nav-toggle {
@@ -563,6 +574,41 @@ section {
 }
 
 /* ---------- Menu page ---------- */
+
+.menu-search {
+  margin-bottom: 28px;
+}
+
+.menu-search-input {
+  width: 100%;
+  max-width: 420px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  border: 2px solid var(--color-bg-alt);
+  background: var(--color-white);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+
+.menu-search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.menu-search-empty {
+  color: var(--color-text-muted);
+  padding: 20px 0;
+}
+
+/* Used instead of the [hidden] attribute for search filtering — several
+   elements here (.menu-item, .menu-category-section via other rules) set
+   their own `display`, which silently wins over the browser's default
+   [hidden] behavior (author styles beat user-agent styles regardless of
+   specificity). !important guarantees this one always actually hides. */
+.menu-search-hide {
+  display: none !important;
+}
 
 .menu-layout {
   display: flex;

@@ -12,6 +12,7 @@ var itemsByCategory = {};
 var activeCategoryId = null;
 var suppressSpyUntil = 0;
 var tickingScroll = false;
+var searchActive = false;
 
 function escapeHtml(str) {
   var div = document.createElement('div');
@@ -57,7 +58,7 @@ function renderCategorySection(cat) {
   var dividerHtml = '';
   if (cat.dividerBefore) {
     dividerHtml =
-      '<div class="section-header" style="text-align:left;margin:0 0 24px;max-width:none;">' +
+      '<div class="section-header" data-divider-for="' + escapeAttr(cat.id) + '" style="text-align:left;margin:0 0 24px;max-width:none;">' +
         '<span class="section-eyebrow">' + escapeHtml(cat.dividerBefore.eyebrow) + '</span>' +
         '<h2>' + escapeHtml(cat.dividerBefore.title) + '</h2>' +
         '<p>' + escapeHtml(cat.dividerBefore.note) + '</p>' +
@@ -234,10 +235,71 @@ function onScroll() {
   if (tickingScroll) return;
   tickingScroll = true;
   window.requestAnimationFrame(function () {
-    updateActiveFromScroll();
+    // Scroll-spy doesn't make sense against a filtered list where most
+    // sections are hidden — skip it while a search is active.
+    if (!searchActive) updateActiveFromScroll();
     updateBackToTop();
     tickingScroll = false;
   });
+}
+
+function getOrCreateSearchEmptyMessage() {
+  var msg = document.getElementById('menuSearchEmpty');
+  if (!msg) {
+    msg = document.createElement('p');
+    msg.id = 'menuSearchEmpty';
+    msg.className = 'menu-search-empty';
+    msg.hidden = true;
+    document.getElementById('menuMain').appendChild(msg);
+  }
+  return msg;
+}
+
+function applySearch(rawQuery) {
+  var main = document.getElementById('menuMain');
+  var sidebar = document.getElementById('menuSidebar');
+  var query = rawQuery.trim().toLowerCase();
+  searchActive = query.length > 0;
+
+  var emptyMsg = getOrCreateSearchEmptyMessage();
+
+  if (!searchActive) {
+    main.querySelectorAll('.menu-search-hide').forEach(function (el) {
+      el.classList.remove('menu-search-hide');
+    });
+    emptyMsg.hidden = true;
+    if (sidebar) sidebar.classList.remove('menu-search-hide');
+    updateActiveFromScroll();
+    return;
+  }
+
+  if (sidebar) sidebar.classList.add('menu-search-hide');
+
+  var anyVisible = false;
+  main.querySelectorAll('.menu-category-section').forEach(function (section) {
+    var sectionHasMatch = false;
+    section.querySelectorAll('.menu-item').forEach(function (item) {
+      var name = (item.dataset.name || '').toLowerCase();
+      var descEl = item.querySelector('.menu-item-desc');
+      var descText = descEl ? descEl.textContent.toLowerCase() : '';
+      var matches = name.indexOf(query) !== -1 || descText.indexOf(query) !== -1;
+      item.classList.toggle('menu-search-hide', !matches);
+      if (matches) sectionHasMatch = true;
+    });
+    section.classList.toggle('menu-search-hide', !sectionHasMatch);
+
+    // The "Sharing Meals" section-header divider (if any) sits as a plain
+    // sibling before its section, not inside it — hide it in tandem so a
+    // filtered-out category doesn't leave an orphaned heading behind.
+    var categoryId = section.dataset.categoryId;
+    var divider = main.querySelector('[data-divider-for="' + categoryId + '"]');
+    if (divider) divider.classList.toggle('menu-search-hide', !sectionHasMatch);
+
+    if (sectionHasMatch) anyVisible = true;
+  });
+
+  emptyMsg.hidden = anyVisible;
+  emptyMsg.textContent = anyVisible ? '' : 'No menu items match "' + rawQuery.trim() + '". Try a different search.';
 }
 
 function updateHeaderHeightVar() {
@@ -261,6 +323,17 @@ async function loadMenu() {
     });
   }
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  // Disabled until real items exist to search against (renderMain enables
+  // it) — typing during the loading-skeleton window would just search
+  // placeholder content.
+  var searchInput = document.getElementById('menuSearch');
+  if (searchInput) {
+    searchInput.disabled = true;
+    searchInput.addEventListener('input', function () {
+      applySearch(searchInput.value);
+    });
+  }
 
   try {
     var snaps = await Promise.all([
@@ -293,6 +366,7 @@ async function loadMenu() {
     renderSidebar();
     renderMain();
     updateHeaderHeightVar();
+    if (searchInput) searchInput.disabled = false;
 
     var initial = window.location.hash.replace('#', '');
     if (!categories.some(function (c) { return c.id === initial; })) {
