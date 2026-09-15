@@ -15,18 +15,42 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+function escapeAttr(str) {
+  var div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML.replace(/"/g, '&quot;');
+}
+
 function renderCard(special, dayName) {
   var photo = special.imageUrl
     ? '<img class="promo-photo" src="' + escapeHtml(special.imageUrl) + '" alt="' + escapeHtml(special.item) + '">'
     : '<span class="promo-emoji" aria-hidden="true">🎉</span>';
 
+  // Older specials (saved before the Price field existed) have no numeric
+  // price yet, so there's nothing valid to put in the cart/WhatsApp order —
+  // show the card as display-only until the admin sets one.
+  var price = Number(special.price) || 0;
+  // A distinct cart line name from the plain menu item of the same name, so
+  // adding both doesn't merge into one line at the wrong price (the cart
+  // matches items by name) — and it reads clearly in the WhatsApp message.
+  var cartName = special.item + " (Today's Special)";
+  var order = price > 0
+    ? (
+        '<div class="promo-card-order">' +
+          '<div class="promo-price">R' + price + '</div>' +
+          '<button class="menu-item-add" type="button" data-name="' + escapeAttr(cartName) + '" data-price="' + price + '" aria-label="Add ' + escapeAttr(special.item) + ' special to order">+</button>' +
+        '</div>'
+      )
+    : '';
+
   return (
     '<div class="promo-card">' +
       photo +
-      '<div>' +
+      '<div class="promo-card-info">' +
         '<div class="promo-day">' + dayName + "'s Special</div>" +
         '<div class="promo-text">' + escapeHtml(special.item) + ' — ' + escapeHtml(special.promo) + '</div>' +
       '</div>' +
+      order +
     '</div>'
   );
 }

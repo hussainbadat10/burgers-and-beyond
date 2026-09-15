@@ -239,10 +239,10 @@ export const BUSINESS_INFO = {
 // Firestore) so the admin panel can add or remove specials per day freely —
 // not just edit one fixed slot. Sunday has no key at all (shop is closed).
 export const DAILY_SPECIALS = {
-  monday: [{ item: 'Classic Smash', promo: '10% off', imageUrl: '', order: 1 }],
-  tuesday: [{ item: 'Wors Roll Special', promo: 'R10 off', imageUrl: '', order: 1 }],
-  wednesday: [{ item: 'Toasted Cheese', promo: 'Buy 1, get 1 half price', imageUrl: '', order: 1 }],
-  thursday: [{ item: '3 Full Wings', promo: 'R10 off', imageUrl: '', order: 1 }],
-  friday: [{ item: 'Streetbox 1 — Regular', promo: '10% off', imageUrl: '', order: 1 }],
-  saturday: [{ item: 'Hulk Smash', promo: 'R15 off', imageUrl: '', order: 1 }]
+  monday: [{ item: 'Classic Smash', promo: '10% off', price: 50, imageUrl: '', order: 1 }],
+  tuesday: [{ item: 'Wors Roll Special', promo: 'R10 off', price: 40, imageUrl: '', order: 1 }],
+  wednesday: [{ item: 'Toasted Cheese', promo: 'Buy 1, get 1 half price', price: 35, imageUrl: '', order: 1 }],
+  thursday: [{ item: '3 Full Wings', promo: 'R10 off', price: 45, imageUrl: '', order: 1 }],
+  friday: [{ item: 'Streetbox 1 — Regular', promo: '10% off', price: 60, imageUrl: '', order: 1 }],
+  saturday: [{ item: 'Hulk Smash', promo: 'R15 off', price: 70, imageUrl: '', order: 1 }]
 };

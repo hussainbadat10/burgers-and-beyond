@@ -972,6 +972,24 @@ section {
   margin-top: 4px;
 }
 
+.promo-card-info {
+  min-width: 0;
+}
+
+.promo-card-order {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.promo-price {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+}
+
 /* ---------- About page ---------- */
 
 .about-hero {

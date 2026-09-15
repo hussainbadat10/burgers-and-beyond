@@ -829,7 +829,7 @@ function renderSpecialRow(day, special) {
   var fileId = 'special-photo-' + day + '-' + special.id;
 
   return (
-    '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr auto;" data-day="' + day + '" data-item-id="' + special.id + '">' +
+    '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr 110px auto;" data-day="' + day + '" data-item-id="' + special.id + '">' +
       '<div>' +
         photo +
         '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
@@ -837,6 +837,7 @@ function renderSpecialRow(day, special) {
       '</div>' +
       '<input type="text" data-field="item" value="' + escapeAttr(special.item || '') + '" placeholder="Item name">' +
       '<input type="text" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off">' +
+      '<input type="number" data-field="price" value="' + (special.price || '') + '" placeholder="Price (R)" min="0" step="1">' +
       '<div class="admin-item-actions">' +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-special">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-special">Delete</button>' +
@@ -847,9 +848,10 @@ function renderSpecialRow(day, special) {
 
 function renderAddSpecialRow(day) {
   return (
-    '<div class="admin-add-item" style="grid-template-columns: 1fr 1fr auto;" data-day="' + day + '">' +
+    '<div class="admin-add-item" style="grid-template-columns: 1fr 1fr 110px auto;" data-day="' + day + '">' +
       '<input type="text" data-field="item" placeholder="New item name">' +
       '<input type="text" data-field="promo" placeholder="e.g. 10% off">' +
+      '<input type="number" data-field="price" placeholder="Price (R)" min="0" step="1">' +
       '<button class="admin-btn admin-btn-primary" type="button" data-action="add-special">Add Special</button>' +
     '</div>'
   );
@@ -893,6 +895,7 @@ async function saveSpecial(row) {
   var id = row.dataset.itemId;
   var item = row.querySelector('[data-field="item"]').value.trim();
   var promo = row.querySelector('[data-field="promo"]').value.trim();
+  var price = Number(row.querySelector('[data-field="price"]').value) || 0;
 
   if (!item || !promo) {
     showToast('Item name and promo are both required');
@@ -900,7 +903,7 @@ async function saveSpecial(row) {
   }
 
   try {
-    await updateDoc(doc(db, 'dailySpecials', day, 'items', id), { item: item, promo: promo });
+    await updateDoc(doc(db, 'dailySpecials', day, 'items', id), { item: item, promo: promo, price: price });
     showToast(DAY_LABELS[day] + "'s special saved");
   } catch (err) {
     console.error(err);
@@ -926,6 +929,7 @@ async function addSpecial(addRowEl) {
   var day = addRowEl.dataset.day;
   var item = addRowEl.querySelector('[data-field="item"]').value.trim();
   var promo = addRowEl.querySelector('[data-field="promo"]').value.trim();
+  var price = Number(addRowEl.querySelector('[data-field="price"]').value) || 0;
 
   if (!item || !promo) {
     showToast('Item name and promo are both required');
@@ -940,7 +944,7 @@ async function addSpecial(addRowEl) {
       if (order > maxOrder) maxOrder = order;
     });
 
-    await addDoc(collection(db, 'dailySpecials', day, 'items'), { item: item, promo: promo, imageUrl: '', order: maxOrder + 1 });
+    await addDoc(collection(db, 'dailySpecials', day, 'items'), { item: item, promo: promo, price: price, imageUrl: '', order: maxOrder + 1 });
     showToast('Special added to ' + DAY_LABELS[day]);
     loadSpecialsEditor();
   } catch (err) {
