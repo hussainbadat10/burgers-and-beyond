@@ -43,9 +43,15 @@ function escapeHtml(str) {
 }
 
 function renderCard(card) {
+  // A real photo/logo (e.g. the Halaal certification badge) takes priority
+  // over the emoji — a card has one or the other, not both.
+  var icon = card.imageUrl
+    ? '<img class="card-photo" src="' + escapeHtml(card.imageUrl) + '" alt="">'
+    : '<div class="card-emoji">' + escapeHtml(card.emoji || '') + '</div>';
+
   return (
     '<div class="card">' +
-      '<div class="card-emoji">' + escapeHtml(card.emoji || '') + '</div>' +
+      icon +
       '<h3>' + escapeHtml(card.title || '') + '</h3>' +
       '<p>' + escapeHtml(card.desc || '') + '</p>' +
     '</div>'

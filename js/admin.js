@@ -143,11 +143,42 @@ async function migrateFixedSiteContentCards(prefix, count, collectionName) {
       emoji: content[prefix + i + 'Emoji'] || '',
       title: title,
       desc: content[prefix + i + 'Desc'] || '',
+      imageUrl: '',
       order: i
     });
     wrote = true;
   }
   if (wrote) await batch.commit();
+}
+
+// The Halaal certification card was never a siteContent field at all — it
+// was hardcoded HTML in about.html, not admin-editable, by deliberate
+// earlier design (per hbadat, that restriction was a judgment call, not
+// something asked for — reversed). Unlike the migration above, this can't
+// be gated on "valueCards is still empty": Fan Favourites/Value Cards had
+// already been migrated (3 real cards) before this reversal, so that guard
+// would never fire again. Checks specifically for whether the Halaal card
+// itself exists yet (by its known imageUrl) instead, so it correctly
+// backfills it into an already-migrated collection exactly once, without
+// caring what state that collection was already in.
+async function migrateHalaalCardIfNeeded() {
+  var snap = await getDocs(collection(db, 'valueCards'));
+  var hasHalaal = false;
+  var maxOrder = 0;
+  snap.forEach(function (d) {
+    var data = d.data();
+    if (data.imageUrl === 'images/sanha-logo.png') hasHalaal = true;
+    if ((data.order || 0) > maxOrder) maxOrder = data.order || 0;
+  });
+  if (hasHalaal) return;
+
+  await addDoc(collection(db, 'valueCards'), {
+    emoji: '',
+    title: '100% Halaal حلال',
+    desc: 'Certified Halaal by SANHA — every ingredient, every time.',
+    imageUrl: 'images/sanha-logo.png',
+    order: maxOrder + 1
+  });
 }
 
 // Daily specials used to be one doc per day (dailySpecials/{day}, a single
@@ -180,6 +211,7 @@ async function loadEverything() {
   await fillMissingContentDefaults();
   await migrateFixedSiteContentCards('fanFav', 4, 'fanFavourites');
   await migrateFixedSiteContentCards('value', 3, 'valueCards');
+  await migrateHalaalCardIfNeeded();
   await migrateDailySpecialsIfNeeded();
   await loadMenuEditor();
   await loadContentEditor();
@@ -506,9 +538,11 @@ async function saveContentGroup(groupEl) {
 
 // ---------- Card collections (Fan Favourites, Value Cards) ----------
 
-// Both are the exact same shape (emoji + title + description, freely
-// add/remove) so one factory builds both editors instead of duplicating
-// identical CRUD logic twice.
+// Both are the exact same shape (emoji or photo + title + description,
+// freely add/remove) so one factory builds both editors instead of
+// duplicating identical CRUD logic twice. A photo (uploaded to Cloudinary,
+// same as menu item photos) takes priority over the emoji when both are
+// set — used for e.g. the Halaal certification card's real logo.
 function makeCardCollectionEditor(collectionName, editorElId) {
   async function load() {
     var editor = document.getElementById(editorElId);
@@ -524,14 +558,27 @@ function makeCardCollectionEditor(collectionName, editorElId) {
     editor.querySelectorAll('[data-action="delete-item"]').forEach(function (btn) {
       btn.addEventListener('click', function () { deleteRow(btn.closest('.admin-item-row')); });
     });
+    editor.querySelectorAll('[data-action="upload-photo"]').forEach(function (input) {
+      input.addEventListener('change', function () { uploadPhoto(input); });
+    });
     editor.querySelectorAll('[data-action="add-item"]').forEach(function (btn) {
       btn.addEventListener('click', function () { addRow(btn.closest('.admin-add-item')); });
     });
   }
 
   function renderRow(card) {
+    var photo = card.imageUrl
+      ? '<img src="' + escapeAttr(card.imageUrl) + '" class="admin-item-photo" alt="">'
+      : '<div class="admin-item-photo"></div>';
+    var fileId = collectionName + '-photo-' + card.id;
+
     return (
-      '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 2fr auto;" data-item-id="' + card.id + '">' +
+      '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 2fr auto;" data-item-id="' + card.id + '">' +
+        '<div>' +
+          photo +
+          '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-photo" style="display:none">' +
+          '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
+        '</div>' +
         '<input type="text" data-field="emoji" value="' + escapeAttr(card.emoji || '') + '" style="text-align:center;font-size:1.3rem;" placeholder="🔥">' +
         '<input type="text" data-field="title" value="' + escapeAttr(card.title || '') + '" placeholder="Title">' +
         '<textarea data-field="desc" placeholder="Description">' + (card.desc || '') + '</textarea>' +
@@ -586,6 +633,44 @@ function makeCardCollectionEditor(collectionName, editorElId) {
     }
   }
 
+  async function uploadPhoto(input) {
+    var file = input.files[0];
+    if (!file) return;
+    var row = input.closest('.admin-item-row');
+    var id = row.dataset.itemId;
+
+    showToast('Uploading photo…');
+    try {
+      var formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) throw new Error('Cloudinary upload failed: ' + res.status);
+      var result = await res.json();
+      var url = optimizedCloudinaryUrl(result.secure_url);
+
+      await updateDoc(doc(db, collectionName, id), { imageUrl: url });
+
+      var img = row.querySelector('.admin-item-photo');
+      if (img.tagName === 'IMG') {
+        img.src = url;
+      } else {
+        var newImg = document.createElement('img');
+        newImg.className = 'admin-item-photo';
+        newImg.src = url;
+        img.replaceWith(newImg);
+      }
+      showToast('Photo updated');
+    } catch (err) {
+      console.error(err);
+      showToast('Photo upload failed — try again');
+    }
+  }
+
   async function addRow(addRowEl) {
     var emoji = addRowEl.querySelector('[data-field="emoji"]').value.trim();
     var title = addRowEl.querySelector('[data-field="title"]').value.trim();
@@ -603,7 +688,7 @@ function makeCardCollectionEditor(collectionName, editorElId) {
         if (order > maxOrder) maxOrder = order;
       });
 
-      await addDoc(collection(db, collectionName), { emoji: emoji, title: title, desc: '', order: maxOrder + 1 });
+      await addDoc(collection(db, collectionName), { emoji: emoji, title: title, desc: '', imageUrl: '', order: maxOrder + 1 });
       showToast('Card added');
       load();
     } catch (err) {

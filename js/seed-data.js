@@ -193,20 +193,25 @@ export const SITE_CONTENT = {
 
 // Home page "Fan Favourites" cards — own collection (not part of SITE_CONTENT)
 // so the admin panel can add/remove cards, not just edit a fixed set of 4.
+// A card can have a real photo (imageUrl) instead of an emoji — takes
+// priority over the emoji when both are set.
 export const FAN_FAVOURITES = [
-  { emoji: '🔨', title: 'Hulk Smash', desc: '3x smash patty, 3x cheeses, lettuce, onion, gherkin & green chillie — not for the faint-hearted.', order: 1 },
-  { emoji: '🥖', title: 'Gatsby AK47', desc: 'A mega half-metre roll loaded with russians, polonys, viennas and all the sauces.', order: 2 },
-  { emoji: '🥪', title: 'Toasted Steak Special', desc: 'Pulled steak, cheese, chips and a signature sauce.', order: 3 },
-  { emoji: '🍗', title: 'Flame Grilled Chicken', desc: 'Quarter, half or full chicken — flame-grilled and served with chips, salad or pap.', order: 4 }
+  { emoji: '🔨', title: 'Hulk Smash', desc: '3x smash patty, 3x cheeses, lettuce, onion, gherkin & green chillie — not for the faint-hearted.', imageUrl: '', order: 1 },
+  { emoji: '🥖', title: 'Gatsby AK47', desc: 'A mega half-metre roll loaded with russians, polonys, viennas and all the sauces.', imageUrl: '', order: 2 },
+  { emoji: '🥪', title: 'Toasted Steak Special', desc: 'Pulled steak, cheese, chips and a signature sauce.', imageUrl: '', order: 3 },
+  { emoji: '🍗', title: 'Flame Grilled Chicken', desc: 'Quarter, half or full chicken — flame-grilled and served with chips, salad or pap.', imageUrl: '', order: 4 }
 ];
 
 // About page "value" cards — own collection for the same reason. The 4th
-// Halaal-certification card on the page is fixed/not editable, so it isn't
-// part of this collection at all (see about.html).
+// card (Halaal certification) uses the real SANHA logo as its imageUrl
+// instead of an emoji — fully editable/deletable like the other three, per
+// hbadat (the earlier "not editable" restriction was a judgment call, not
+// something asked for).
 export const VALUE_CARDS = [
-  { emoji: '🔥', title: 'Flame-Grilled', desc: 'Every patty, every time — never a frozen shortcut.', order: 1 },
-  { emoji: '⏱️', title: 'Made To Order', desc: 'Nothing sits and waits. Your food is cooked when you call.', order: 2 },
-  { emoji: '🤝', title: 'Local & Honest', desc: 'Straightforward menu, fair prices, no gimmicks.', order: 3 }
+  { emoji: '🔥', title: 'Flame-Grilled', desc: 'Every patty, every time — never a frozen shortcut.', imageUrl: '', order: 1 },
+  { emoji: '⏱️', title: 'Made To Order', desc: 'Nothing sits and waits. Your food is cooked when you call.', imageUrl: '', order: 2 },
+  { emoji: '🤝', title: 'Local & Honest', desc: 'Straightforward menu, fair prices, no gimmicks.', imageUrl: '', order: 3 },
+  { emoji: '', title: '100% Halaal حلال', desc: 'Certified Halaal by SANHA — every ingredient, every time.', imageUrl: 'images/sanha-logo.png', order: 4 }
 ];
 
 export const BUSINESS_INFO = {

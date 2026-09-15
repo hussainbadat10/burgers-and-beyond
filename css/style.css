@@ -187,12 +187,6 @@ p {
   flex-shrink: 0;
 }
 
-.halaal-card-logo {
-  height: 72px;
-  width: auto;
-  margin: 0 auto 16px;
-}
-
 .footer-halaal-logo {
   height: 26px;
   width: auto;
@@ -463,6 +457,17 @@ section {
   align-items: center;
   justify-content: center;
   font-size: 2rem;
+}
+
+/* Used instead of .card-emoji when a card has a real photo/logo (e.g. the
+   Halaal certification badge) rather than an emoji — not cropped into the
+   circle, since a logo/badge graphic usually isn't square. */
+.card-photo {
+  height: 72px;
+  width: auto;
+  max-width: 100%;
+  margin: 0 auto 18px;
+  display: block;
 }
 
 .card h3 {
