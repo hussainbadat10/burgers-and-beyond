@@ -1,0 +1,17 @@
+{
+  "name": "burgers-and-beyond",
+  "version": "1.0.0",
+  "description": "Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant. The HTML pages are built from Eleventy templates (src/) that share one header/footer/cart/cookie-banner instead of repeating them per page; the build output is plain static HTML/CSS/JS with no client-side framework. Firebase (Firestore + Auth) powers the menu, daily specials, and site text, and Cloudinary hosts menu photo uploads — so the owner can edit all of it directly without touching code.",
+  "private": true,
+  "scripts": {
+    "build": "eleventy",
+    "serve": "eleventy --serve",
+    "check": "python3 scripts/check_site.py"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@11ty/eleventy": "^3.1.6"
+  }
+}

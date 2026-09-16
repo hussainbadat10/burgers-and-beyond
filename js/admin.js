@@ -987,7 +987,7 @@ function renderSpecialRow(day, special) {
       '<label class="sr-only" for="' + itemId + '">Special item name</label>' +
       '<input type="text" id="' + itemId + '" data-field="item" value="' + escapeAttr(special.item || '') + '" placeholder="Item name">' +
       '<label class="sr-only" for="' + promoId + '">Special promo text</label>' +
-      '<input type="text" id="' + promoId + '" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off">' +
+      '<input type="text" id="' + promoId + '" data-field="promo" value="' + escapeAttr(special.promo || '') + '" placeholder="e.g. 10% off (optional)">' +
       '<label class="sr-only" for="' + priceId + '">Special price in Rand</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" value="' + (special.price || '') + '" placeholder="Price (R)" min="0" step="1">' +
       '<div class="admin-item-actions">' +
@@ -1007,7 +1007,7 @@ function renderAddSpecialRow(day) {
       '<label class="sr-only" for="' + itemId + '">New special item name for ' + DAY_LABELS[day] + '</label>' +
       '<input type="text" id="' + itemId + '" data-field="item" placeholder="New item name">' +
       '<label class="sr-only" for="' + promoId + '">New special promo text for ' + DAY_LABELS[day] + '</label>' +
-      '<input type="text" id="' + promoId + '" data-field="promo" placeholder="e.g. 10% off">' +
+      '<input type="text" id="' + promoId + '" data-field="promo" placeholder="e.g. 10% off (optional)">' +
       '<label class="sr-only" for="' + priceId + '">New special price in Rand for ' + DAY_LABELS[day] + '</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" placeholder="Price (R)" min="0" step="1">' +
       '<button class="admin-btn admin-btn-primary" type="button" data-action="add-special">Add Special</button>' +
@@ -1055,8 +1055,8 @@ async function saveSpecial(row) {
   var promo = row.querySelector('[data-field="promo"]').value.trim();
   var price = Math.max(0, Number(row.querySelector('[data-field="price"]').value) || 0);
 
-  if (!item || !promo) {
-    showToast('Item name and promo are both required');
+  if (!item) {
+    showToast('Item name is required');
     return;
   }
 
@@ -1089,8 +1089,8 @@ async function addSpecial(addRowEl) {
   var promo = addRowEl.querySelector('[data-field="promo"]').value.trim();
   var price = Math.max(0, Number(addRowEl.querySelector('[data-field="price"]').value) || 0);
 
-  if (!item || !promo) {
-    showToast('Item name and promo are both required');
+  if (!item) {
+    showToast('Item name is required');
     return;
   }
 

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include "partials/head-meta.njk" %}
+</head>
+<body>
+
+  <header class="site-header">
+    <nav class="nav">
+      <a href="index.html" class="nav-logo"><img src="images/icon.png" alt="">Burgers <span>N</span> Beyond</a>
+    </nav>
+  </header>
+
+{{ content | safe }}
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>
