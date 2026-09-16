@@ -43,11 +43,28 @@ def error(msg):
     errors.append(msg)
 
 
+def find_html_files():
+    # Recursive on purpose: every current page has an explicit flat
+    # `permalink` in its front matter (about.html, not about/index.html), so
+    # a plain top-level listdir happens to see everything today. But a future
+    # page added without a permalink would land in a subdirectory
+    # (Eleventy's default) and silently never get checked at all under a
+    # non-recursive scan — walking the whole tree means a link/JSON-LD
+    # problem on a page like that still fails loudly instead of passing by
+    # omission.
+    found = []
+    for dirpath, _dirnames, filenames in os.walk(ROOT):
+        for f in filenames:
+            if f.endswith('.html'):
+                found.append(os.path.join(dirpath, f))
+    return found
+
+
 def check_internal_references():
-    html_files = [f for f in os.listdir(ROOT) if f.endswith('.html')]
     attr_pattern = re.compile(r'(?:href|src)="([^"]+)"')
-    for filename in html_files:
-        path = os.path.join(ROOT, filename)
+    for path in find_html_files():
+        rel_display = os.path.relpath(path, ROOT)
+        page_dir = os.path.dirname(path)
         with open(path, encoding='utf-8') as f:
             content = f.read()
         for match in attr_pattern.finditer(content):
@@ -57,10 +74,15 @@ def check_internal_references():
             ref_path = ref.split('#')[0].split('?')[0]
             if not ref_path:
                 continue
-            resolved = os.path.normpath(os.path.join(ROOT, ref_path))
+            # Absolute-from-site-root refs (leading "/") resolve against
+            # ROOT; plain relative refs resolve against the page's own
+            # directory, same as a real browser — this only differs from
+            # ROOT for a page Eleventy has nested in a subdirectory.
+            base = ROOT if ref_path.startswith('/') else page_dir
+            resolved = os.path.normpath(os.path.join(base, ref_path.lstrip('/')))
             if not os.path.isfile(resolved):
                 error('{}: broken reference "{}" (resolved to {}, file does not exist)'.format(
-                    filename, ref, os.path.relpath(resolved, ROOT)))
+                    rel_display, ref, os.path.relpath(resolved, ROOT)))
 
 
 def check_manifest():
@@ -77,17 +99,15 @@ def check_manifest():
 
 def check_jsonld_blocks():
     ldjson_pattern = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
-    for filename in os.listdir(ROOT):
-        if not filename.endswith('.html'):
-            continue
-        path = os.path.join(ROOT, filename)
+    for path in find_html_files():
+        rel_display = os.path.relpath(path, ROOT)
         with open(path, encoding='utf-8') as f:
             content = f.read()
         for match in ldjson_pattern.finditer(content):
             try:
                 json.loads(match.group(1))
             except json.JSONDecodeError as e:
-                error('{}: invalid JSON-LD block ({})'.format(filename, e))
+                error('{}: invalid JSON-LD block ({})'.format(rel_display, e))
 
 
 def check_sitemap():

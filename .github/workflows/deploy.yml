@@ -29,8 +29,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Deploy previously ran independently of the Checks workflow (both just
+      # trigger on push to main), so a commit that failed checks.yml could
+      # still deploy live — these two steps make this workflow fail closed
+      # instead of relying on Checks alone.
+      - name: Check JS syntax
+        run: |
+          status=0
+          for f in $(find js -name '*.js') sw.js; do
+            echo "Checking $f"
+            node --check "$f" || status=1
+          done
+          exit $status
+
       - name: Build site (Eleventy)
         run: npm run build
+
+      - name: Check links, manifest, JSON-LD, sitemap
+        run: python3 scripts/check_site.py
 
       - name: Upload build output
         uses: actions/upload-pages-artifact@v3
