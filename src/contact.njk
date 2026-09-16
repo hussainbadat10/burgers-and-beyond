@@ -1,0 +1,101 @@
+---
+layout: layouts/base.njk
+permalink: "contact.html"
+title: "Contact — Burgers N Beyond"
+description: "Get in touch with Burgers N Beyond — phone, address and opening hours."
+ogDescription: "Get in touch with Burgers N Beyond — phone, address and opening hours."
+canonical: "contact.html"
+scripts:
+  - src: js/cart.js
+    module: true
+  - src: js/site-content.js
+    module: true
+  - src: js/store-status.js
+    module: true
+---
+    <section class="hero" style="padding: 70px 24px 60px;">
+      <div class="container">
+        <span class="hero-eyebrow" data-content-key="contactHeroEyebrow">Get In Touch</span>
+        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);" data-content-key="contactHeroTitle">Contact Us</h1>
+        <p class="hero-sub" data-content-key="contactHeroSub">Call ahead to order, or drop by during opening hours for collection.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="contact-grid">
+
+          <div class="contact-card">
+            <h3>Order &amp; Collection</h3>
+
+            <div class="contact-row">
+              <span class="emoji">📞</span>
+              <div>
+                <strong>Phone</strong>
+                <a href="tel:+27825140077" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a><br>
+                <a href="tel:+27824211750" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <span class="emoji">📍</span>
+              <div>
+                <strong>Address</strong>
+                <span data-content-key="addressLine1">80 Main Reef Rd</span><span data-sep-for="addressLine2">, </span><span data-content-key="addressLine2">Randfontein, 1760</span><br>
+                <a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" data-content-href-key="mapsHref">Get Directions</a>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <span class="emoji">🕒</span>
+              <div>
+                <strong>Opening Hours</strong>
+                <span class="store-status" data-store-status-wrap hidden>
+                  <span class="store-status-badge" data-store-status>Open Now</span>
+                  <span class="store-status-detail" data-store-status-detail></span>
+                </span>
+                <span data-content-key="hoursMonSat">Mon–Sat: 10:00 – 18:30</span><br>
+                <span data-content-key="hoursFri">Fri: closed 12:20 – 13:20</span><br>
+                <span data-content-key="hoursSun">Sun: Closed</span>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <span class="emoji">🛵</span>
+              <div>
+                <strong>Delivery</strong>
+                <a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener" data-content-href-key="mrdHref">Order on Mr D Food</a>
+              </div>
+            </div>
+
+            <div class="contact-row">
+              <span class="emoji">✉️</span>
+              <div>
+                <strong>Queries or Feedback</strong>
+                <a href="mailto:Burgersnbeyondsa@gmail.com" data-content-key="emailText" data-content-href-key="emailHref">Burgersnbeyondsa@gmail.com</a>
+              </div>
+            </div>
+
+            <div class="social-row">
+              <a href="https://www.instagram.com/burgers._n_beyond/" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram" data-content-href-key="instagramHref">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                  <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <iframe
+            class="map-frame"
+            title="Burgers N Beyond location"
+            src="https://www.google.com/maps?q=80+Main+Reef+Rd%2C+Randfontein%2C+1760&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            data-content-map="1">
+          </iframe>
+
+        </div>
+      </div>
+    </section>

@@ -32,12 +32,19 @@ function renderCard(special, dayName) {
       )
     : '';
 
+  // promo is just marketing copy (e.g. "10% off") and is optional — not
+  // every special needs a discount blurb, especially now a real Price can
+  // stand on its own.
+  var text = special.promo
+    ? escapeHtml(special.item) + ' — ' + escapeHtml(special.promo)
+    : escapeHtml(special.item);
+
   return (
     '<div class="promo-card">' +
       photo +
       '<div class="promo-card-info">' +
         '<div class="promo-day">' + dayName + "'s Special</div>" +
-        '<div class="promo-text">' + escapeHtml(special.item) + ' — ' + escapeHtml(special.promo) + '</div>' +
+        '<div class="promo-text">' + text + '</div>' +
       '</div>' +
       order +
     '</div>'
@@ -59,7 +66,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     var specials = [];
     snap.forEach(function (d) {
       var data = d.data();
-      if (data.item && data.promo) specials.push(data);
+      if (data.item) specials.push(data);
     });
 
     // Pre-migration fallback: the old single-special-per-day doc still has
@@ -69,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       var legacySnap = await getDoc(doc(db, 'dailySpecials', dayKey));
       if (legacySnap.exists()) {
         var legacy = legacySnap.data();
-        if (legacy.item && legacy.promo) specials.push(legacy);
+        if (legacy.item) specials.push(legacy);
       }
     }
 

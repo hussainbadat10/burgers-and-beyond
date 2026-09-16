@@ -2,8 +2,14 @@
 """
 Pre-deploy sanity checks for the Burgers N Beyond static site.
 
+Runs against the Eleventy BUILD OUTPUT (_site/), not the src/ templates —
+that's what actually ships, and the only place a broken include/permalink
+would show up as a real broken link. Run `npm run build` first (the CI
+workflow does this before calling this script; locally, run it yourself
+if _site/ is stale or missing).
+
 Runs automatically on every push/PR via .github/workflows/checks.yml, and
-can be run locally too: python3 scripts/check_site.py
+can be run locally too: npm run build && python3 scripts/check_site.py
 
 Deliberately scoped to checks that are 100% signal, zero noise — every
 failure here means a real problem worth fixing before it goes live, never
@@ -24,8 +30,13 @@ import re
 import sys
 import xml.etree.ElementTree as ET
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(PROJECT_ROOT, '_site')
 errors = []
+
+if not os.path.isdir(ROOT):
+    print('_site/ not found — run `npm run build` first.')
+    sys.exit(1)
 
 
 def error(msg):

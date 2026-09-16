@@ -1,0 +1,39 @@
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+{% if description %}
+  <meta name="description" content="{{ description }}">
+{% endif %}
+{% if robots %}
+  <meta name="robots" content="{{ robots }}">
+{% endif %}
+{% if canonical %}
+  <link rel="canonical" href="https://hussainbadat10.github.io/burgers-and-beyond/{{ canonical }}">
+{% endif %}
+{% if ogDescription %}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Burgers N Beyond">
+  <meta property="og:title" content="{{ title }}">
+  <meta property="og:description" content="{{ ogDescription }}">
+  <meta property="og:url" content="https://hussainbadat10.github.io/burgers-and-beyond/{{ canonical }}">
+  <meta property="og:image" content="https://hussainbadat10.github.io/burgers-and-beyond/images/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ title }}">
+  <meta name="twitter:description" content="{{ ogDescription }}">
+  <meta name="twitter:image" content="https://hussainbadat10.github.io/burgers-and-beyond/images/og-image.png">
+{% endif %}
+  <link rel="icon" type="image/png" href="images/favicon.png">
+{% if appleTouchIcon !== false %}
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+{% endif %}
+{% if manifest !== false %}
+  <link rel="manifest" href="site.webmanifest">
+{% endif %}
+{% if themeColor !== false %}
+  <meta name="theme-color" content="#141414">
+{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Luckiest+Guy{% if arabicFont !== false %}&family=Noto+Naskh+Arabic:wght@500;700{% endif %}&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">

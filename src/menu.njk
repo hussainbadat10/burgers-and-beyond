@@ -1,0 +1,90 @@
+---
+layout: layouts/base.njk
+permalink: "menu.html"
+title: "Menu — Burgers N Beyond"
+description: "Full takeaway menu for Burgers N Beyond — smash burgers, gatsbys, kotas, wings, grills and more."
+ogDescription: "Full takeaway menu — smash burgers, gatsbys, kotas, wings, grills and more."
+canonical: "menu.html"
+backToTop: true
+scripts:
+  - src: js/cart.js
+    module: true
+  - src: js/menu-loader.js
+    module: true
+  - src: js/promo.js
+    module: true
+  - src: js/site-content.js
+    module: true
+---
+    <section class="hero" style="padding: 70px 24px 60px;">
+      <div class="container">
+        <span class="hero-eyebrow" data-content-key="menuHeroEyebrow">Takeaway Only</span>
+        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);" data-content-key="menuHeroTitle">Our Menu</h1>
+        <p class="hero-sub" data-content-key="menuHeroSub">From smash burgers to gatsbys, kotas and flame-grilled wings — everything's made fresh to order. Prices in ZAR (R).</p>
+      </div>
+    </section>
+
+    <section class="promo-strip" id="promoStrip" hidden>
+      <div class="container">
+        <div class="promo-cards" id="promoCards"></div>
+      </div>
+    </section>
+
+    <section style="padding-bottom: 40px;">
+      <div class="container container-wide">
+        <div class="menu-search">
+          <input type="search" id="menuSearch" class="menu-search-input" placeholder="Search the menu… (e.g. chicken, cheese)" aria-label="Search the menu">
+        </div>
+        <div class="menu-layout">
+          <nav class="menu-sidebar" id="menuSidebar" aria-label="Menu categories" aria-busy="true">
+            <span class="sr-only">Loading menu categories…</span>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+            <div class="skeleton skeleton-sidebar-item" aria-hidden="true"></div>
+          </nav>
+          <div class="menu-main" id="menuMain" aria-busy="true">
+            <span class="sr-only">Loading menu…</span>
+            <div class="skeleton skeleton-title" aria-hidden="true"></div>
+            <div class="menu-list" aria-hidden="true">
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+              <div class="menu-item skeleton-card">
+                <div class="menu-item-main">
+                  <div class="skeleton skeleton-line skeleton-line-name"></div>
+                  <div class="skeleton skeleton-line skeleton-line-price"></div>
+                  <div class="skeleton skeleton-line skeleton-line-desc"></div>
+                </div>
+                <div class="menu-item-side"><div class="skeleton skeleton-circle"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>

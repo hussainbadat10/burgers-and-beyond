@@ -1,25 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Burgers N Beyond</title>
-  <meta name="robots" content="noindex, nofollow">
-  <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
-  <meta name="theme-color" content="#141414">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Luckiest+Guy&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-
-  <header class="site-header">
-    <nav class="nav">
-      <a href="index.html" class="nav-logo"><img src="images/icon.png" alt="">Burgers <span>N</span> Beyond</a>
-    </nav>
-  </header>
-
+---
+layout: layouts/admin.njk
+permalink: "admin.html"
+title: "Admin — Burgers N Beyond"
+robots: "noindex, nofollow"
+manifest: false
+arabicFont: false
+---
   <div id="loginView" class="admin-login">
     <h1>Admin Login</h1>
     <p>Log in to edit the menu, photos, site text, and daily specials.</p>
@@ -101,7 +87,3 @@
   </div>
 
   <div id="toast" class="admin-toast"></div>
-
-  <script type="module" src="js/admin.js"></script>
-</body>
-</html>

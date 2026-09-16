@@ -1,0 +1,66 @@
+---
+layout: layouts/base.njk
+permalink: "about.html"
+title: "About — Burgers N Beyond"
+description: "The story behind Burgers N Beyond, a flame-grilled takeaway burger joint."
+ogDescription: "The story behind Burgers N Beyond, a flame-grilled takeaway burger joint."
+canonical: "about.html"
+scripts:
+  - src: js/cart.js
+    module: true
+  - src: js/site-content.js
+    module: true
+---
+    <section class="hero" style="padding: 70px 24px 60px;">
+      <div class="container">
+        <span class="hero-eyebrow" data-content-key="aboutHeroEyebrow">Our Story</span>
+        <h1 style="font-size: clamp(2rem, 5vw, 3.2rem);" data-content-key="aboutHeroTitle">About Burgers N Beyond</h1>
+        <p class="hero-sub" data-content-key="aboutHeroSub">Good burgers, made properly, served fast — that's the whole idea.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="container about-content">
+        <p data-content-key="aboutIntro">Founded in 2019, Burgers N Beyond started with a simple frustration: too many "quick" burgers taste like it. We set out to build a takeaway spot where every patty is flame-grilled to order, every bun is toasted fresh, and every side is made in-house — without making you wait around for it.</p>
+
+        <h2 data-content-key="whatWeBelieveHeading">What We Believe</h2>
+        <p data-content-key="aboutBelieve">From smash burgers to gatsbys, kotas and roti wraps, our menu covers a lot of ground — but nothing on it is an afterthought. Every item gets the same attention: proper ingredients, cooked to order, no shortcuts.</p>
+
+        <h2 data-content-key="takeawayDoneRightHeading">Takeaway, Done Right</h2>
+        <p data-content-key="aboutTakeaway">We're a takeaway-only kitchen, and we've built our whole process around that. Call ahead, and your order will be hot and ready the moment you walk in — no sitting around, no soggy fries from sitting under a heat lamp.</p>
+
+        <div class="values-grid" id="valueCardsWrap">
+          <div class="card">
+            <div class="card-emoji">🔥</div>
+            <h3>Flame-Grilled</h3>
+            <p>Every patty, every time — never a frozen shortcut.</p>
+          </div>
+          <div class="card">
+            <div class="card-emoji">⏱️</div>
+            <h3>Made To Order</h3>
+            <p>Nothing sits and waits. Your food is cooked when you call.</p>
+          </div>
+          <div class="card">
+            <div class="card-emoji">🤝</div>
+            <h3>Local &amp; Honest</h3>
+            <p>Straightforward menu, fair prices, no gimmicks.</p>
+          </div>
+          <div class="card">
+            <img src="images/sanha-logo.png" alt="" class="card-photo">
+            <h3>100% Halaal <span class="arabic-text" lang="ar" dir="rtl">حلال</span></h3>
+            <p>Certified Halaal by SANHA — every ingredient, every time.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-alt">
+      <div class="container text-center">
+        <div class="section-header">
+          <span class="section-eyebrow" data-content-key="aboutCtaEyebrow">Hungry Yet?</span>
+          <h2 data-content-key="aboutCtaHeading">Come Taste The Difference</h2>
+          <p data-content-key="aboutCtaText">Check out the full menu, then give us a call to place your order.</p>
+        </div>
+        <a href="menu.html" class="btn btn-primary">View The Menu</a>
+      </div>
+    </section>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{% include "partials/head-meta.njk" %}
+{% if jsonld %}
+{% include "partials/jsonld-restaurant.njk" %}
+{% endif %}
+</head>
+<body>
+
+{% include "partials/header.njk" %}
+
+  <main>
+{{ content | safe }}
+  </main>
+
+{% include "partials/footer.njk" %}
+
+{% include "partials/cart-widget.njk" %}
+
+{% include "partials/cookie-banner.njk" %}
+
+  <script src="js/script.js"></script>
+{% for s in scripts %}
+  <script{% if s.module %} type="module"{% endif %} src="{{ s.src }}"></script>
+{% endfor %}
+  <script src="js/analytics.js"></script>
+</body>
+</html>

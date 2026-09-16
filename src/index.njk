@@ -1,0 +1,106 @@
+---
+layout: layouts/base.njk
+permalink: "index.html"
+title: "Burgers N Beyond — Flame-Grilled Takeaway Burgers"
+description: "Burgers N Beyond — smash burgers, gatsbys, kotas and flame-grilled wings. Order for takeaway today."
+ogDescription: "Smash burgers, gatsbys, kotas and flame-grilled wings. Order for takeaway today."
+canonical: "index.html"
+jsonld: true
+scripts:
+  - src: js/cart.js
+    module: true
+  - src: js/site-content.js
+    module: true
+  - src: js/store-status.js
+    module: true
+---
+    <section class="hero">
+      <div class="container">
+        <span class="hero-eyebrow" data-content-key="heroEyebrow">Takeaway Only · Flame-Grilled Daily</span>
+        <h1 data-content-key="heroHeadline">Good Food, Good Mood!</h1>
+        <p class="hero-sub" data-content-key="heroSub">Burgers N Beyond serves up smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order and ready for collection.</p>
+        <div class="hero-actions">
+          <a href="menu.html" class="btn btn-primary">View The Menu</a>
+          <a href="tel:+27825140077" class="btn btn-outline">Call 082 514 0077</a>
+          <a href="tel:+27824211750" class="btn btn-outline">Call 082 421 1750</a>
+        </div>
+        <div class="hero-emoji-row" aria-hidden="true">🍔 🍟 🥤</div>
+      </div>
+    </section>
+
+    <section class="info-strip">
+      <div class="container">
+        <div class="info-grid">
+          <div>
+            <h4>Opening Hours</h4>
+            <span class="store-status" data-store-status-wrap hidden>
+              <span class="store-status-badge" data-store-status>Open Now</span>
+              <span class="store-status-detail" data-store-status-detail></span>
+            </span>
+            <p data-content-key="hoursMonSat">Mon–Sat: 10:00 – 18:30</p>
+            <p data-content-key="hoursFri">Fri: closed 12:20 – 13:20</p>
+            <p data-content-key="hoursSun">Sun: Closed</p>
+          </div>
+          <div>
+            <h4>Collection Point</h4>
+            <p><a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" data-content-key="addressLine1" data-content-href-key="mapsHref">80 Main Reef Rd</a></p>
+            <p data-content-key="addressLine2">Randfontein, 1760</p>
+          </div>
+          <div>
+            <h4>Order By Phone</h4>
+            <p><a href="tel:+27825140077" data-content-key="phone1Text" data-content-href-key="phone1Href">082 514 0077</a></p>
+            <p><a href="tel:+27824211750" data-content-key="phone2Text" data-content-href-key="phone2Href">082 421 1750</a></p>
+          </div>
+          <div>
+            <h4>Order Delivery</h4>
+            <p><a href="https://www.mrd.com/delivery/restaurant/burgers-n-beyond-randfontein-cbd/31105?section=6955689" target="_blank" rel="noopener" data-content-href-key="mrdHref">Order on Mr D Food</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="section-header">
+          <span class="section-eyebrow">Fan Favourites</span>
+          <h2 data-content-key="fanFavHeading">What We're Known For</h2>
+          <p data-content-key="fanFavSub">A few of the menu highlights our regulars keep coming back for.</p>
+        </div>
+        <div class="card-grid" id="fanFavGrid">
+          <div class="card">
+            <div class="card-emoji">🔨</div>
+            <h3>Hulk Smash</h3>
+            <p>3x smash patty, 3x cheeses, lettuce, onion, gherkin &amp; green chillie — not for the faint-hearted.</p>
+          </div>
+          <div class="card">
+            <div class="card-emoji">🥖</div>
+            <h3>Gatsby AK47</h3>
+            <p>A mega half-metre roll loaded with russians, polonys, viennas and all the sauces.</p>
+          </div>
+          <div class="card">
+            <div class="card-emoji">🥪</div>
+            <h3>Toasted Steak Special</h3>
+            <p>Pulled steak, cheese, chips and a signature sauce.</p>
+          </div>
+          <div class="card">
+            <div class="card-emoji">🍗</div>
+            <h3>Flame Grilled Chicken</h3>
+            <p>Quarter, half or full chicken — flame-grilled and served with chips, salad or pap.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-alt">
+      <div class="container text-center">
+        <div class="section-header">
+          <span class="section-eyebrow">Customer Reviews</span>
+          <h2 data-content-key="reviewsHeading">Loved By Locals</h2>
+          <p data-content-key="reviewsSub">We're proud of the reviews we've earned on Google. Read what people are saying, or leave your own if you've enjoyed a meal with us.</p>
+        </div>
+        <div class="hero-actions">
+          <a href="https://www.google.com/maps/place/?q=place_id:ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" class="btn btn-outline-dark" data-content-href-key="mapsHref">Read Our Reviews</a>
+          <a href="https://search.google.com/local/writereview?placeid=ChIJCcZKIRWXlR4R4rzPcr4PmvA" target="_blank" rel="noopener" class="btn btn-primary" data-content-href-key="writeReviewHref">Leave A Review</a>
+        </div>
+      </div>
+    </section>

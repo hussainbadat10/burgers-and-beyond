@@ -1,21 +1,37 @@
 # Burgers N Beyond
 
-Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant. Plain HTML/CSS/JS (no build step) for the pages themselves, with **Firebase** (Firestore + Auth) powering the menu, daily specials, and some site text, and **Cloudinary** hosting menu photo uploads — so the owner can edit all of it directly without touching code.
+Marketing + ordering website for Burgers N Beyond, a takeaway burger restaurant. The HTML pages are built from [Eleventy](https://www.11ty.dev/) templates in `src/` — one shared header/footer/cart-widget/cookie-banner instead of copy-pasting them across 7 pages — but the build output is still plain static HTML/CSS/JS with no client-side framework, so it deploys anywhere a static site does. **Firebase** (Firestore + Auth) powers the menu, daily specials, and some site text, and **Cloudinary** hosts menu photo uploads — so the owner can edit all of it directly without touching code.
 
 **Live at:** https://hussainbadat10.github.io/burgers-and-beyond/ (deployed via GitHub Pages, auto-updates on every push to `main`)
 
 ## Structure
 
 ```
-index.html      Home page — hero, Fan Favourites, Reviews: all editable via admin
-menu.html       Full menu — loaded live from Firestore, sticky category sidebar
-                (horizontal chips on mobile) + a 2-column item grid
-about.html      Restaurant story — hero, story paragraphs, value cards, CTA: all editable
-contact.html    Phone, address, hours, map — all editable via admin
-admin.html      Password-protected admin panel (menu, photos, site text, business info, daily specials)
-privacy.html    Plain-language privacy/cookies page, linked from every footer
-404.html        Branded not-found page (GitHub Pages serves this automatically
-                for any unmatched URL)
+src/            Eleventy page templates (Nunjucks, .njk) — one file per real
+                page, front matter drives per-page title/meta/scripts
+  index.njk       Home page — hero, Fan Favourites, Reviews: all editable via admin
+  menu.njk        Full menu — loaded live from Firestore, sticky category sidebar
+                  (horizontal chips on mobile) + a 2-column item grid
+  about.njk       Restaurant story — hero, story paragraphs, value cards, CTA: all editable
+  contact.njk     Phone, address, hours, map — all editable via admin
+  admin.njk       Password-protected admin panel (menu, photos, site text, business info, daily specials)
+  privacy.njk     Plain-language privacy/cookies page, linked from every footer
+  404.njk         Branded not-found page (GitHub Pages serves this automatically
+                  for any unmatched URL)
+  _includes/
+    layouts/        base.njk (the 5 full pages), bare.njk (404, no cart/cookie/
+                    analytics), admin.njk (its own minimal header, no footer/cart)
+    partials/       header.njk, footer.njk, cart-widget.njk, cookie-banner.njk,
+                    head-meta.njk (title/description/OG/Twitter/favicon/fonts,
+                    parameterized via each page's front matter), jsonld-restaurant.njk
+.eleventy.js    Eleventy config — input `src/`, output `_site/`, passthrough-copies
+                css/js/images/sw.js/site.webmanifest/robots.txt/sitemap.xml as-is
+                (they need no templating, so they stay right where they are —
+                only the HTML page shells moved under src/)
+package.json    `npm run build` (one-shot build to _site/), `npm run serve`
+                (build + rebuild on save + local server, for editing src/)
+_site/          Build output — what actually gets deployed. Gitignored; never
+                edit files here directly, they're regenerated from src/ every build
 robots.txt      Allows crawling, disallows /admin.html, points to sitemap.xml
 sitemap.xml     Lists the public pages for search engines
 site.webmanifest  "Add to Home Screen" metadata (name, icons, theme color)
@@ -85,15 +101,15 @@ images/         Logo + real photos go here (see below)
 
 ## Running locally
 
-No build tools needed for the static pages. Either:
+Editing a page means editing its template under `src/`, not a root-level `.html` file (those no longer exist — they're build output).
 
-- Open `index.html` directly in a browser, or
-- Serve it locally so relative paths behave exactly like production:
-  ```bash
-  npx serve .
-  # or
-  python3 -m http.server 8000
-  ```
+```bash
+npm install        # one-time
+npm run build       # one-shot build: src/ -> _site/
+npm run serve       # build + watch src/ for changes + serve _site/ on localhost
+```
+
+`npm run serve` rebuilds automatically on save but does **not** hot-reload Firebase data — that always comes live from the network regardless of how you're serving the built HTML. To just serve an existing `_site/` without rebuilding: `python3 -m http.server 8000 --directory _site`.
 
 The Firebase-backed pages (menu, admin, and the editable text on home/about) need real network access to Firebase's CDN and the live project either way — there's nothing to run locally for that part.
 
@@ -127,6 +143,15 @@ Google Analytics (GA4, measurement ID `G-RYYWS16PFL`) is wired up in `js/analyti
 
 The menu's search box (`#menuSearch` in `menu.html`, logic in `js/menu-loader.js`) filters items by name and description as you type. The sidebar hides while a search is active (category navigation doesn't apply to a filtered list) and reappears when the search is cleared. Filtering uses a dedicated `.menu-search-hide { display: none !important }` class rather than the `[hidden]` attribute — `.menu-item` and `.menu-sidebar` both set their own `display`, which silently overrides the browser's default `[hidden]` behavior (the same bug class as the promo-photo fix earlier in this file's history).
 
+## Migrating to Eleventy — two deliberate, harmless output changes
+
+The move from 7 hand-authored HTML files to Eleventy templates (`src/`) was verified to produce byte-identical output for every page **except two intentional, harmless normalizations**, both confirmed by diffing the old files against the new build output line-by-line:
+
+- **`404.html`'s footer** previously hardcoded its text (no `data-content-key` attributes, since `site-content.js` was never loaded on that page anyway) and didn't link to `privacy.html`. It now uses the same shared `footer.njk` partial as every other page — the `data-content-key` attributes stay inert (still no `site-content.js` on this page, so nothing fills them; the static fallback text is unaffected), and the footer now includes the "Privacy & Cookies" link, matching every other page.
+- **`privacy.html`'s `<title>`** renders `Privacy &amp; Cookies` instead of the old raw `Privacy & Cookies` — Nunjucks auto-escapes `{{ title }}`. Both render identically in a browser tab; the escaped form is the more strictly correct HTML.
+
+No other page has any content, attribute, or script difference from before the migration — verified via `diff` (whitespace-only elsewhere) and a full Playwright regression pass (every public page, the cart/WhatsApp flow, service worker caching/offline fallback, and the whole admin panel against real production data).
+
 ## Offline support (service worker)
 
 `sw.js` caches the static shell — every public HTML page, `css/style.css`, the public JS files, and the icon/logo images — for instant repeat loads and basic offline browsing. Registered from `js/script.js` after `window.load`, so it never competes with a page's own initial load.
@@ -139,7 +164,7 @@ The menu's search box (`#menuSearch` in `menu.html`, logic in `js/menu-loader.js
 
 CSS/JS/images were originally stale-while-revalidate instead (serve the cached copy instantly, refetch in the background for next time), for a snappier repeat load. **That was the wrong tradeoff and caused a real incident**: a genuine bug fix to `site-content.js` (the address "Line 2" not disappearing when blanked — see git history) checked out correctly in every fresh test, but a real returning visitor's browser kept running the pre-fix code for one more load — their first load after the deploy still served the old, broken `site-content.js` straight from cache, with the fix only downloading silently in the background for their *next* load. Switched to network-first for these too once this surfaced; a few milliseconds of "instant from cache" isn't worth "a shipped fix doesn't actually take effect for a page load or two."
 
-To force a cache reset after a future change to what gets precached, bump `CACHE_NAME` in `sw.js` (currently `bnb-shell-v2`) — the old cache is deleted automatically on activate.
+To force a cache reset after a future change to what gets precached, bump `CACHE_NAME` in `sw.js` (currently `bnb-shell-v3`) — the old cache is deleted automatically on activate.
 
 ## One-time activation: Fan Favourites, Value Cards, Daily Specials
 
@@ -156,13 +181,14 @@ These three moved from a fixed shape (a set number of siteContent fields; one sp
 
 ## Automated checks
 
-`.github/workflows/checks.yml` runs on every push/PR to `main`: JS syntax check on every file in `js/` + `sw.js`, and `scripts/check_site.py` (broken internal `href`/`src` references, `site.webmanifest`/JSON-LD/`sitemap.xml` well-formedness). Deliberately scoped to zero-noise checks — no generic HTML linter, since this project intentionally uses patterns (inline `style` attributes, etc.) that a strict default linter config would flag as style nitpicks rather than real problems. A failure here always means something worth fixing, never something to argue with or suppress. Run it locally any time with `python3 scripts/check_site.py`.
+`.github/workflows/checks.yml` runs on every push/PR to `main`: JS syntax check on every file in `js/` + `sw.js`, an Eleventy build (`npm run build`), then `scripts/check_site.py` against the **build output** (`_site/`) — broken internal `href`/`src` references, `site.webmanifest`/JSON-LD/`sitemap.xml` well-formedness. Deliberately scoped to zero-noise checks — no generic HTML linter, since this project intentionally uses patterns (inline `style` attributes, etc.) that a strict default linter config would flag as style nitpicks rather than real problems. A failure here always means something worth fixing, never something to argue with or suppress. Run it locally any time with `npm run build && python3 scripts/check_site.py`.
 
 ## Deploying
 
-Already live on GitHub Pages (see top of this file) — push to `main` and it redeploys automatically within a minute or two. The Firebase project and Cloudinary account have no separate deploy step — changes via the admin panel (or the Firebase/Cloudinary consoles directly) take effect immediately, live.
+**GitHub Pages** (already live, see top of this file): `.github/workflows/deploy.yml` builds the Eleventy site and publishes `_site/` via GitHub's Pages Actions (`actions/upload-pages-artifact` + `actions/deploy-pages`) on every push to `main` — redeploys within a minute or two. This requires the repo's Pages source (Settings → Pages) to be set to **"GitHub Actions"**, not "Deploy from a branch" — the old legacy branch-deploy mode doesn't know about the `_site/` build step. The Firebase project and Cloudinary account have no separate deploy step either way — changes via the admin panel (or the Firebase/Cloudinary consoles directly) take effect immediately, live.
 
-If you ever want to move the static pages off GitHub Pages:
+**Moving to Afrihost (or any other static host / cPanel):** the build output is plain static files, so there's no code to change — only where it's uploaded from.
 
-- **Netlify / Vercel**: drag-and-drop the folder, or connect the git repo
-- Any standard web host / cPanel — just upload the files
+- Run `npm run build` locally (or download the `_site` artifact from a GitHub Actions run) and upload the **contents of `_site/`** (not the folder itself) to the host's web root via FTP/SFTP or cPanel's File Manager.
+- To keep the same "push to `main` auto-deploys" workflow instead of manual uploads each time, add an FTP-deploy step to `.github/workflows/deploy.yml` (e.g. [`SamKirkland/FTP-Deploy-Action`](https://github.com/SamKirkland/FTP-Deploy-Action)) pointed at `_site/`, with the host's FTP credentials stored as GitHub Actions secrets — never committed to the repo.
+- **Netlify / Vercel** also work unmodified: point either at this repo with build command `npm run build` and publish directory `_site`.
