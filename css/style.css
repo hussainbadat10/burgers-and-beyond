@@ -459,13 +459,19 @@ section {
   font-size: 2rem;
 }
 
-/* Used instead of .card-emoji when a card has a real photo/logo (e.g. the
-   Halaal certification badge) rather than an emoji — not cropped into the
-   circle, since a logo/badge graphic usually isn't square. */
+/* Used instead of .card-emoji when a card has a real photo/logo — any
+   Fan Favourite or Value Card, uploaded via the admin panel, plus the
+   Halaal certification badge. Fixed to the same 72x72 footprint as
+   .card-emoji so every card in a grid reads as the same size regardless
+   of what gets uploaded. object-fit: contain (not cover) deliberately
+   never crops — a food photo shows fully inset rather than edge-to-edge,
+   but a non-square logo like the Halaal badge (a wide certification
+   graphic with its own text) never has its wording cut off either,
+   which cropping to fill a square would risk. */
 .card-photo {
+  width: 72px;
   height: 72px;
-  width: auto;
-  max-width: 100%;
+  object-fit: contain;
   margin: 0 auto 18px;
   display: block;
 }
