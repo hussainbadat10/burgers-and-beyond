@@ -1704,6 +1704,12 @@ section {
 }
 
 .admin-panel-section {
+  /* Same fix as .menu-category-section: this is also a <section> element,
+     so it inherited the generic `section { padding: 80px 0; }` rule meant
+     for major full-width page sections — 80px above and below every admin
+     tab's content is dead space in what should be a dense, functional
+     tool, not a marketing page. */
+  padding: 0;
   margin-bottom: 40px;
 }
 
