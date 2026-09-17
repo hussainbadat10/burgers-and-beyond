@@ -253,10 +253,11 @@ async function loadEverything() {
     await loadContentEditorForPage('homeContentEditor', 'home');
     await loadFanFavEditor();
     await loadContentEditorForPage('menuContentEditor', 'menu');
-    await loadMenuEditor();
     await loadSpecialsEditor();
+    await loadMenuEditor();
     await loadContentEditorForPage('aboutContentEditor', 'about');
     await loadValueCardEditor();
+    await loadContentEditorForPage('aboutCtaContentEditor', 'about-cta');
     await loadContentEditorForPage('contactContentEditor', 'contact');
     await loadBusinessEditor();
   } catch (err) {
@@ -646,7 +647,11 @@ var CONTENT_GROUPS = [
     ]
   },
   {
-    page: 'about',
+    // Its own page value (not 'about') so it renders in a separate
+    // container placed after the Value Cards editor in admin.html — on the
+    // real About page, the value cards sit between the story paragraphs
+    // and this bottom CTA, so the admin tab mirrors that order too.
+    page: 'about-cta',
     title: 'Bottom CTA',
     fields: [
       { key: 'aboutCtaEyebrow', label: 'Eyebrow', type: 'input' },
