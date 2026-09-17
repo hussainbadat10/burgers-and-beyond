@@ -767,6 +767,10 @@ section {
   border-radius: 10px;
   object-fit: cover;
   flex-shrink: 0;
+  /* Clears .menu-item-add's footprint (top: 20px, 36px tall, positioned
+     relative to the card) so the button sits in its own space above the
+     photo instead of overlapping its corner. */
+  margin-top: 40px;
 }
 
 .menu-item-add {
