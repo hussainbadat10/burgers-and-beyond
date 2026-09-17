@@ -685,6 +685,14 @@ section {
 }
 
 .menu-category-section {
+  /* Overrides the generic `section { padding: 80px 0; }` rule above, meant
+     for major full-width page sections (hero, testimonials) — inheriting
+     it here (this is also a <section> element) left ~216px of dead space
+     between one category's last item row and the next category's heading
+     (80px + 80px padding + this rule's own 56px margin), reported as a
+     large visible gap when browsing the menu. margin-bottom alone is
+     enough separation between categories. */
+  padding: 0;
   scroll-margin-top: calc(var(--header-height, 88px) + 16px);
   margin-bottom: 56px;
 }
