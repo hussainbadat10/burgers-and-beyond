@@ -25,9 +25,13 @@ function renderItem(item) {
     ? '<div class="menu-item-desc">' + escapeHtml(item.description) + '</div>'
     : '';
   var photo = item.imageUrl
-    ? '<img src="' + escapeAttr(item.imageUrl) + '" alt="' + name + '" class="menu-item-photo" loading="lazy" width="80" height="80">'
+    ? '<img src="' + escapeAttr(item.imageUrl) + '" alt="' + name + '" class="menu-item-photo" loading="lazy" width="100" height="80">'
     : '';
 
+  // The add button floats in the card's top-right corner via its own
+  // absolute positioning (see .menu-item-add in css/style.css) rather than
+  // stacking above the photo in a side column — it needs to sit at a
+  // consistent corner position whether or not this item has a photo.
   return (
     '<div class="menu-item" data-name="' + name + '" data-price="' + item.price + '">' +
       '<div class="menu-item-main">' +
@@ -35,10 +39,8 @@ function renderItem(item) {
         '<div class="menu-item-price">R' + item.price + '</div>' +
         desc +
       '</div>' +
-      '<div class="menu-item-side">' +
-        '<button class="menu-item-add" type="button" data-name="' + name + '" data-price="' + item.price + '" aria-label="Add ' + name + ' to order">+</button>' +
-        photo +
-      '</div>' +
+      photo +
+      '<button class="menu-item-add" type="button" data-name="' + name + '" data-price="' + item.price + '" aria-label="Add ' + name + ' to order">+</button>' +
     '</div>'
   );
 }

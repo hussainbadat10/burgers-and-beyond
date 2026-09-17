@@ -719,6 +719,7 @@ section {
 }
 
 .menu-item {
+  position: relative;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -731,6 +732,10 @@ section {
 
 .menu-item-main {
   min-width: 0;
+  /* Room for the add button, which floats in the card's top-right corner
+     via .menu-item-add's own absolute positioning below — without this,
+     a long item name with no photo would run underneath it. */
+  padding-right: 40px;
 }
 
 .menu-item-name {
@@ -756,22 +761,18 @@ section {
   margin-top: 8px;
 }
 
-.menu-item-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 12px;
-  flex-shrink: 0;
-}
-
 .menu-item-photo {
-  width: 80px;
+  width: 100px;
   height: 80px;
   border-radius: 10px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .menu-item-add {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -787,6 +788,7 @@ section {
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow);
   transition: background 0.15s ease, transform 0.15s ease;
 }
 
@@ -913,6 +915,9 @@ section {
 }
 
 .skeleton-circle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
