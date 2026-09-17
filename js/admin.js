@@ -252,6 +252,7 @@ async function loadEverything() {
     await migrateDailySpecialsIfNeeded();
     await loadContentEditorForPage('homeContentEditor', 'home');
     await loadFanFavEditor();
+    await loadBrandingEditor();
     await loadContentEditorForPage('menuContentEditor', 'menu');
     await loadSpecialsEditor();
     await loadMenuEditor();
@@ -680,6 +681,63 @@ async function fetchSiteContent() {
   var snap = await getDoc(doc(db, 'siteContent', 'main'));
   siteContentCache = snap.exists() ? snap.data() : {};
   return siteContentCache;
+}
+
+// The nav/footer logo and the small Halaal badge shown next to it on every
+// page — separate from the About page's Halaal VALUE CARD photo (edited in
+// the About tab, via Value Cards). Both start out as static files
+// (images/icon.png, images/sanha-logo.png); uploading here stores a
+// Cloudinary URL in siteContent/main that js/site-content.js's
+// data-content-src-key handler swaps in at runtime, same fallback pattern
+// as everything else on this site.
+var BRANDING_FIELDS = [
+  { key: 'logoImageUrl', label: 'Site Logo (header & footer)', staticFallback: 'images/icon.png' },
+  { key: 'halaalBadgeImageUrl', label: 'Halaal Badge (header & footer)', staticFallback: 'images/sanha-logo.png' }
+];
+
+async function loadBrandingEditor() {
+  var editor = document.getElementById('brandingEditor');
+  var content = await fetchSiteContent();
+
+  editor.innerHTML = BRANDING_FIELDS.map(function (f) {
+    var url = content[f.key] || f.staticFallback;
+    var fileId = 'branding-photo-' + f.key;
+    return (
+      '<div class="admin-item-row" style="grid-template-columns: 56px 1fr;" data-branding-key="' + f.key + '">' +
+        '<div>' +
+          '<img src="' + escapeAttr(url) + '" class="admin-item-photo" alt="">' +
+          '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-branding-photo" style="display:none">' +
+          '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
+        '</div>' +
+        '<div style="align-self:center;">' + f.label + '</div>' +
+      '</div>'
+    );
+  }).join('');
+
+  editor.querySelectorAll('[data-action="upload-branding-photo"]').forEach(function (input) {
+    input.addEventListener('change', function () { uploadBrandingPhoto(input); });
+  });
+}
+
+async function uploadBrandingPhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var row = input.closest('[data-branding-key]');
+  var key = row.dataset.brandingKey;
+
+  showToast('Uploading photo…');
+  try {
+    var url = await uploadPhotoToCloudinary(file);
+    var data = {};
+    data[key] = url;
+    await setDoc(doc(db, 'siteContent', 'main'), data, { merge: true });
+    siteContentCache = null; // next load should reflect the new URL, not the stale cache
+    swapAdminPhotoThumbnail(row.querySelector('.admin-item-photo'), url);
+    showToast('Photo updated');
+  } catch (err) {
+    console.error(err);
+    showToast('Photo upload failed — try again');
+  }
 }
 
 // Renders only the CONTENT_GROUPS entries belonging to one page into that

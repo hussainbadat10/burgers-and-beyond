@@ -7,6 +7,16 @@
 //   data-content-key="fieldName"        sets el.textContent
 //   data-content-href-key="fieldName"   sets el.href
 //   data-content-phone-key="fieldName"  sets el.dataset.phone (for cart.js's WhatsApp buttons)
+//   data-content-src-key="fieldName"    sets el.src (branding images — the
+//                                       nav/footer logo and Halaal badge —
+//                                       uploaded via the admin panel's Home
+//                                       tab). Unlike the other attributes,
+//                                       an intentionally-blank value isn't
+//                                       meaningful here (there's no text
+//                                       field to blank, only an upload), so
+//                                       this one only ever swaps to a real
+//                                       uploaded URL — it never hides the
+//                                       image.
 //   data-content-map="1"                builds a Google Maps embed src from
 //                                       addressLine1 + addressLine2 (contact.html only)
 //   data-sep-for="fieldName"            a separator (e.g. ", ") next to a
@@ -73,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   renderCardCollection('fanFavGrid', 'fanFavourites');
   renderCardCollection('valueCardsWrap', 'valueCards');
 
-  var hasWork = document.querySelector('[data-content-key], [data-content-href-key], [data-content-phone-key], [data-content-map]');
+  var hasWork = document.querySelector('[data-content-key], [data-content-href-key], [data-content-phone-key], [data-content-src-key], [data-content-map]');
   if (!hasWork) return;
 
   try {
@@ -115,6 +125,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       var key = el.getAttribute('data-content-phone-key');
       if (!(key in content)) return;
       if (content[key]) el.setAttribute('data-phone', content[key]);
+    });
+
+    document.querySelectorAll('[data-content-src-key]').forEach(function (el) {
+      var key = el.getAttribute('data-content-src-key');
+      if (content[key]) el.src = content[key];
     });
 
     var mapEl = document.querySelector('[data-content-map]');
