@@ -468,15 +468,20 @@ section {
    Fan Favourite or Value Card, uploaded via the admin panel, plus the
    Halaal certification badge. Fixed to the same 72x72 footprint as
    .card-emoji so every card in a grid reads as the same size regardless
-   of what gets uploaded. object-fit: contain (not cover) deliberately
-   never crops — a food photo shows fully inset rather than edge-to-edge,
-   but a non-square logo like the Halaal badge (a wide certification
-   graphic with its own text) never has its wording cut off either,
-   which cropping to fill a square would risk. */
+   of what gets uploaded.
+   object-fit: cover, not contain — a real-world phone photo is very
+   often portrait-oriented, and contain would letterbox that down to a
+   narrow sliver in the middle of the box (confirmed live: several
+   uploaded Fan Favourite photos rendered this way). cover crops instead
+   of shrinking, which reads as a normal filled thumbnail for a food
+   photo. The one non-square case sharing this class, the Halaal badge
+   (a wide certification graphic with its own text), was checked
+   directly at this crop — cover only trims the decorative ribbon tips;
+   the seal and "S.A.N.H.A." text stay fully intact. */
 .card-photo {
   width: 72px;
   height: 72px;
-  object-fit: contain;
+  object-fit: cover;
   margin: 0 auto 18px;
   display: block;
 }
