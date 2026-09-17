@@ -35,5 +35,15 @@
   <meta name="theme-color" content="#141414">
 {% endif %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Luckiest+Guy{% if arabicFont !== false %}&family=Noto+Naskh+Arabic:wght@500;700{% endif %}&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://www.gstatic.com">
+{% set fontsUrl = "https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Luckiest+Guy" + ("&family=Noto+Naskh+Arabic:wght@500;700" if arabicFont !== false else "") + "&family=Inter:wght@400;500;600&display=swap" %}
+  {# Loaded non-render-blocking: media="print" doesn't stop the browser
+     painting while it downloads, then the onload swap applies it once
+     ready. &display=swap (already in the URL) separately keeps text
+     visible with a fallback font in the meantime rather than invisible.
+     noscript covers the (rare) no-JS case with the original blocking link. #}
+  <link rel="preload" href="{{ fontsUrl }}" as="style">
+  <link rel="stylesheet" href="{{ fontsUrl }}" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="{{ fontsUrl }}"></noscript>
   <link rel="stylesheet" href="css/style.css">

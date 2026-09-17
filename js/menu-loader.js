@@ -25,7 +25,7 @@ function renderItem(item) {
     ? '<div class="menu-item-desc">' + escapeHtml(item.description) + '</div>'
     : '';
   var photo = item.imageUrl
-    ? '<img src="' + escapeAttr(item.imageUrl) + '" alt="' + name + '" class="menu-item-photo" loading="lazy">'
+    ? '<img src="' + escapeAttr(item.imageUrl) + '" alt="' + name + '" class="menu-item-photo" loading="lazy" width="80" height="80">'
     : '';
 
   return (

@@ -412,7 +412,12 @@ section {
   letter-spacing: 3px;
   text-transform: uppercase;
   font-size: 0.8rem;
-  color: var(--color-accent);
+  /* --color-accent (#2572b3) is 4.19:1 against --color-bg-alt at this size —
+     just short of WCAG AA's 4.5:1 for normal-weight-sized text. Scoped to
+     this one rule rather than darkening --color-accent everywhere, since
+     that variable's other usages (borders, links elsewhere) weren't shown
+     to have the same gap. */
+  color: #1f5f92;
   margin-bottom: 10px;
 }
 
@@ -501,7 +506,7 @@ section {
   text-align: center;
 }
 
-.info-grid h4 {
+.info-grid h2 {
   font-size: 0.85rem;
   color: var(--color-primary);
   margin-bottom: 8px;
@@ -557,7 +562,9 @@ section {
 
 .store-status-badge--open {
   background: rgba(31, 138, 59, 0.12);
-  color: #1f8a3b;
+  /* #1f8a3b was 3.79:1 against this background — short of WCAG AA's 4.5:1
+     at this badge's small bold text size. */
+  color: #166b2c;
 }
 
 .store-status-badge--closed {
@@ -1035,7 +1042,7 @@ section {
   padding: 32px;
 }
 
-.contact-card h3 {
+.contact-card h2 {
   color: var(--color-dark);
   font-size: 1.2rem;
 }
@@ -1110,7 +1117,7 @@ section {
   margin-bottom: 32px;
 }
 
-.footer-grid h4 {
+.footer-grid .footer-heading {
   color: var(--color-white);
   font-size: 0.95rem;
   margin-bottom: 14px;

@@ -41,7 +41,7 @@ function renderCard(card) {
   // A real photo/logo (e.g. the Halaal certification badge) takes priority
   // over the emoji — a card has one or the other, not both.
   var icon = card.imageUrl
-    ? '<img class="card-photo" src="' + escapeAttr(card.imageUrl) + '" alt="">'
+    ? '<img class="card-photo" src="' + escapeAttr(card.imageUrl) + '" alt="" width="72" height="72">'
     : '<div class="card-emoji">' + escapeHtml(card.emoji || '') + '</div>';
 
   return (

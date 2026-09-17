@@ -16,12 +16,14 @@ var CLOUDINARY_CLOUD_NAME = 'ys741dda';
 var CLOUDINARY_UPLOAD_PRESET = 'BnB_Menu';
 
 // Cloudinary's raw secure_url is the untouched original upload — a phone
-// camera photo can be 5-10MB, which is wildly oversized for an 80px menu
-// thumbnail. Cloudinary can transform on the fly via the URL itself, so
-// this caps the width, and lets it auto-pick quality/format (WebP/AVIF
-// where supported) per visitor, no separate processing step needed.
+// camera photo can be 5-10MB, which is wildly oversized for any of this
+// site's photo displays (80px menu items, 72px cards, 64px specials, all
+// well under 250px even at 3x retina). Cloudinary can transform on the fly
+// via the URL itself, so this caps the width, and lets it auto-pick
+// quality/format (WebP/AVIF where supported) per visitor, no separate
+// processing step needed.
 function optimizedCloudinaryUrl(rawUrl) {
-  return rawUrl.replace('/image/upload/', '/image/upload/w_500,c_limit,q_auto,f_auto/');
+  return rawUrl.replace('/image/upload/', '/image/upload/w_250,c_limit,q_auto,f_auto/');
 }
 
 // Shared by every photo-upload flow (menu items, card collections, daily

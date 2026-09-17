@@ -12,7 +12,7 @@ var DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday
 
 function renderCard(special, dayName) {
   var photo = special.imageUrl
-    ? '<img class="promo-photo" src="' + escapeAttr(special.imageUrl) + '" alt="' + escapeAttr(special.item) + '">'
+    ? '<img class="promo-photo" src="' + escapeAttr(special.imageUrl) + '" alt="' + escapeAttr(special.item) + '" width="64" height="64">'
     : '<span class="promo-emoji" aria-hidden="true">🎉</span>';
 
   // Older specials (saved before the Price field existed) have no numeric
