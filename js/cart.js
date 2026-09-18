@@ -115,7 +115,7 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     var upsell = document.querySelector('.cart-upsell');
     if (!upsell) return;
 
-    if (cartHasASide()) {
+    if (!cart.length || cartHasASide()) {
       upsell.hidden = true;
       upsell.innerHTML = '';
       return;
@@ -182,19 +182,30 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     if (badge) badge.textContent = count;
     if (fab) fab.hidden = count === 0;
 
-    var body = document.querySelector('.cart-panel-body');
+    // The upsell and pickup-time UI live inside the scrollable body, not
+    // the footer — with items, quick-add buttons, and a pickup picker all
+    // vying for space in a panel that's the full screen height on mobile,
+    // keeping the footer to just the total/CTA/note (its original size)
+    // and letting everything else scroll together stops the footer from
+    // growing so tall it squeezes the item list down to a sliver (reported
+    // directly: newly-added items were getting clipped behind the footer).
+    var linesList = document.querySelector('.cart-lines-list');
     var footer = document.querySelector('.cart-panel-footer');
-    if (!body) return;
+    var pickup = document.querySelector('.cart-pickup');
+    if (!linesList) return;
 
     if (!cart.length) {
-      body.innerHTML = '<p class="cart-empty">Your order is empty — add something from the menu.</p>';
+      linesList.innerHTML = '<p class="cart-empty">Your order is empty — add something from the menu.</p>';
       if (footer) footer.hidden = true;
+      if (pickup) pickup.hidden = true;
+      renderUpsell();
       return;
     }
 
     if (footer) footer.hidden = false;
+    if (pickup) pickup.hidden = false;
 
-    body.innerHTML = cart.map(function (i) {
+    linesList.innerHTML = cart.map(function (i) {
       var name = escapeHtml(i.name);
       var attrName = escapeAttr(i.name);
       return (

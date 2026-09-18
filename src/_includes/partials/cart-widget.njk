@@ -13,15 +13,11 @@
       <button class="cart-panel-close" type="button" aria-label="Close">&times;</button>
     </div>
     <div class="cart-panel-body">
-      <p class="cart-empty">Your order is empty — add something from the menu.</p>
-    </div>
-    <div class="cart-panel-footer" hidden>
-      <div class="cart-upsell" hidden></div>
-      <div class="cart-total-row">
-        <span class="cart-total-label">Total</span>
-        <span class="cart-total-value">R0</span>
+      <div class="cart-lines-list">
+        <p class="cart-empty">Your order is empty — add something from the menu.</p>
       </div>
-      <fieldset class="cart-pickup">
+      <div class="cart-upsell" hidden></div>
+      <fieldset class="cart-pickup" hidden>
         <legend>Pickup time</legend>
         <label class="cart-pickup-option">
           <input type="radio" name="pickupTiming" value="asap" checked> ASAP
@@ -31,6 +27,12 @@
         </label>
         <input type="time" class="cart-pickup-time-input" aria-label="Pickup time" hidden>
       </fieldset>
+    </div>
+    <div class="cart-panel-footer" hidden>
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-value">R0</span>
+      </div>
       <p class="cart-eft-note">⚠️ EFT confirms order!</p>
       <div class="cart-order-actions">
         <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077" data-content-phone-key="phone1Wa">Order via WhatsApp — <span data-content-key="phone1Text">082 514 0077</span></a>
