@@ -8,7 +8,7 @@
 // admin.html (and its own JS) is deliberately NOT cached — it's a
 // password-protected internal tool, not something worth precaching for
 // every visitor, and editing content offline wouldn't work anyway.
-var CACHE_NAME = 'bnb-shell-v4';
+var CACHE_NAME = 'bnb-shell-v5';
 
 var PRECACHE_URLS = [
   'index.html',
@@ -32,7 +32,6 @@ var PRECACHE_URLS = [
   'images/icon.png',
   'images/icon-192.png',
   'images/apple-touch-icon.png',
-  'images/logo.png',
   'images/sanha-logo.png',
   'site.webmanifest'
 ];

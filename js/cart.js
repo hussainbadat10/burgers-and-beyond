@@ -251,18 +251,48 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     renderUpsell();
   }
 
+  // Tracks whatever had focus before the panel opened (normally the cart
+  // FAB), so closing it — via the X, the backdrop, Escape, or a completed
+  // order — returns focus there instead of dropping it back to <body>,
+  // which is what a screen-reader or keyboard-only user is left with by
+  // default once the element they were focused on (something inside the
+  // now-hidden panel) is gone.
+  var lastFocusedBeforeOpen = null;
+
+  function getFocusableElements(container) {
+    return Array.from(container.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(function (el) { return el.offsetParent !== null; }); // skip hidden fields (e.g. the empty-cart footer)
+  }
+
   function openPanel() {
     var panel = document.querySelector('.cart-panel');
     var backdrop = document.querySelector('.cart-backdrop');
-    if (panel) panel.classList.add('open');
+    lastFocusedBeforeOpen = document.activeElement;
+    if (panel) {
+      panel.classList.add('open');
+      // inert (not just aria-hidden) so its buttons/inputs can't be
+      // Tab-reached — or get silently focused by a screen reader — while
+      // it's sitting translated off-screen and closed.
+      panel.inert = false;
+      var closeBtn = panel.querySelector('.cart-panel-close');
+      if (closeBtn) closeBtn.focus();
+    }
     if (backdrop) backdrop.classList.add('open');
   }
 
   function closePanel() {
     var panel = document.querySelector('.cart-panel');
     var backdrop = document.querySelector('.cart-backdrop');
-    if (panel) panel.classList.remove('open');
+    if (panel) {
+      panel.classList.remove('open');
+      panel.inert = true;
+    }
     if (backdrop) backdrop.classList.remove('open');
+    if (lastFocusedBeforeOpen && document.body.contains(lastFocusedBeforeOpen)) {
+      lastFocusedBeforeOpen.focus();
+    }
+    lastFocusedBeforeOpen = null;
   }
 
   function resetPickupTimeUi() {
@@ -275,6 +305,33 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
   document.addEventListener('DOMContentLoaded', function () {
     render();
     resetPickupTimeUi();
+
+    // Escape closes the panel, and Tab is trapped inside it while open —
+    // without this, a keyboard user could Tab straight through to the page
+    // content sitting behind the (visually blocking) backdrop.
+    document.addEventListener('keydown', function (e) {
+      var panel = document.querySelector('.cart-panel');
+      if (!panel || !panel.classList.contains('open')) return;
+
+      if (e.key === 'Escape') {
+        closePanel();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        var focusable = getFocusableElements(panel);
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
 
     document.addEventListener('change', function (e) {
       if (e.target.name === 'pickupTiming') {
@@ -333,7 +390,10 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
       }
 
       if (e.target.closest('.cart-clear')) {
-        if (confirm('Clear your whole order?')) clearCart();
+        // Reset pickup time too — otherwise a scheduled time picked for the
+        // cleared order silently carries over into whatever's added next,
+        // even though it was chosen for a completely different order.
+        if (confirm('Clear your whole order?')) { clearCart(); resetPickupTimeUi(); }
         return;
       }
 
