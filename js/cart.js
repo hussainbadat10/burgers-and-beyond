@@ -79,28 +79,69 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     return cart.reduce(function (sum, i) { return sum + i.qty; }, 0);
   }
 
-  // Side items are read straight from the rendered menu DOM (the "On The
-  // Side" category, id "on-the-side" — see seed-data.js) rather than a
-  // second Firestore fetch here: menu-loader.js already rendered them with
-  // .menu-item-name text nodes, so this only needs to exist on menu.html
-  // (where the upsell is actually actionable) and naturally does nothing on
-  // every other page, with zero new coupling between the two modules.
-  function getSideItemNames() {
+  // Side items (name + price) are read straight from the rendered menu DOM
+  // (the "On The Side" category, id "on-the-side" — see seed-data.js)
+  // rather than a second Firestore fetch here: menu-loader.js already
+  // rendered them with data-name/data-price attributes, so this only needs
+  // to exist on menu.html (where the upsell is actually actionable) and
+  // naturally does nothing on every other page, with zero new coupling
+  // between the two modules.
+  function getSideItems() {
     // Scoped to #menuMain specifically — the sidebar nav buttons also carry
     // a matching data-category-id, and an unscoped selector would match one
-    // of those instead (no .menu-item-name children -> an empty result,
-    // which would make the upsell show even when a side IS in the cart).
+    // of those instead (no .menu-item children -> an empty result, which
+    // would make the upsell show even when a side IS in the cart).
     var section = document.querySelector('#menuMain [data-category-id="on-the-side"]');
     if (!section) return null;
-    return Array.from(section.querySelectorAll('.menu-item-name')).map(function (el) {
-      return el.textContent.trim();
+    return Array.from(section.querySelectorAll('.menu-item[data-name]')).map(function (el) {
+      return { name: el.dataset.name, price: parseInt(el.dataset.price, 10) };
     });
   }
 
   function cartHasASide() {
-    var sideNames = getSideItemNames();
-    if (!sideNames) return true; // not on the menu page — nothing to suggest
+    var sides = getSideItems();
+    if (!sides) return true; // not on the menu page — nothing to suggest
+    var sideNames = sides.map(function (s) { return s.name; });
     return cart.some(function (i) { return sideNames.indexOf(i.name) !== -1; });
+  }
+
+  // The cart panel covers the entire screen on mobile, so a text-only nudge
+  // gives no way to actually act on it without closing the panel, hunting
+  // down the sides section, and reopening the cart — real friction reported
+  // after the first version shipped. Quick-add buttons let it be added
+  // without leaving the panel. Capped at 4 so a long sides list doesn't
+  // overwhelm the footer.
+  function renderUpsell() {
+    var upsell = document.querySelector('.cart-upsell');
+    if (!upsell) return;
+
+    if (cartHasASide()) {
+      upsell.hidden = true;
+      upsell.innerHTML = '';
+      return;
+    }
+
+    var sides = (getSideItems() || []).slice(0, 4);
+    if (!sides.length) {
+      upsell.hidden = true;
+      upsell.innerHTML = '';
+      return;
+    }
+
+    upsell.hidden = false;
+    upsell.innerHTML = (
+      '<p class="cart-upsell-msg">🍟 Don\'t forget a side!</p>' +
+      '<div class="cart-upsell-list">' +
+        sides.map(function (s) {
+          var name = escapeAttr(s.name);
+          return (
+            '<button type="button" class="cart-upsell-add" data-name="' + name + '" data-price="' + s.price + '">' +
+              '+ ' + escapeHtml(s.name) + ' (R' + s.price + ')' +
+            '</button>'
+          );
+        }).join('') +
+      '</div>'
+    );
   }
 
   // Pickup time is read fresh from the cart panel UI right before building
@@ -178,8 +219,7 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     var totalValue = document.querySelector('.cart-total-value');
     if (totalValue) totalValue.textContent = 'R' + total();
 
-    var upsell = document.querySelector('.cart-upsell');
-    if (upsell) upsell.hidden = cartHasASide();
+    renderUpsell();
   }
 
   function openPanel() {
@@ -229,6 +269,12 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
           addBtn.classList.remove('added');
           addBtn.textContent = originalText;
         }, 700);
+        return;
+      }
+
+      var upsellBtn = e.target.closest('.cart-upsell-add');
+      if (upsellBtn) {
+        addItem(upsellBtn.dataset.name, parseInt(upsellBtn.dataset.price, 10));
         return;
       }
 
