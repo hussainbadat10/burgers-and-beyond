@@ -374,6 +374,7 @@ function renderItemRow(item) {
   var nameId = 'item-name-' + item.id;
   var descId = 'item-desc-' + item.id;
   var priceId = 'item-price-' + item.id;
+  var upsellId = 'item-upsell-' + item.id;
 
   return (
     '<div class="admin-item-row" data-item-id="' + item.id + '">' +
@@ -387,6 +388,9 @@ function renderItemRow(item) {
         '<input type="text" id="' + nameId + '" data-field="name" value="' + escapeAttr(item.name) + '" placeholder="Name">' +
         '<label class="sr-only" for="' + descId + '">Description</label>' +
         '<textarea id="' + descId + '" data-field="description" placeholder="Description (optional)">' + escapeAttr(item.description || '') + '</textarea>' +
+        '<label class="admin-combo-active" for="' + upsellId + '">' +
+          '<input type="checkbox" id="' + upsellId + '" data-field="upsellSuggested"' + (item.upsellSuggested ? ' checked' : '') + '> Suggest in cart' +
+        '</label>' +
       '</div>' +
       '<label class="sr-only" for="' + priceId + '">Price in Rand</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" value="' + item.price + '" min="0" step="1">' +
@@ -502,6 +506,7 @@ async function saveItem(row) {
   var name = row.querySelector('[data-field="name"]').value.trim();
   var price = Number(row.querySelector('[data-field="price"]').value);
   var description = row.querySelector('[data-field="description"]').value.trim();
+  var upsellSuggested = row.querySelector('[data-field="upsellSuggested"]').checked;
 
   if (!name || !Number.isFinite(price) || price <= 0) {
     showToast('Enter a valid name and a price above R0 first');
@@ -509,7 +514,7 @@ async function saveItem(row) {
   }
 
   try {
-    await updateDoc(doc(db, 'menuItems', id), { name: name, price: price, description: description });
+    await updateDoc(doc(db, 'menuItems', id), { name: name, price: price, description: description, upsellSuggested: upsellSuggested });
     showToast('Saved');
   } catch (err) {
     console.error(err);

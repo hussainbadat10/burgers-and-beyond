@@ -34,8 +34,13 @@ function renderItem(item) {
   // absolute positioning (see .menu-item-add in css/style.css) rather than
   // stacking above the photo in a side column — it needs to sit at a
   // consistent corner position whether or not this item has a photo.
+  //
+  // data-upsell marks items the admin has picked (via the "Suggest in
+  // cart" checkbox in the Menu Items editor) to appear as quick-add
+  // suggestions in the cart panel — see js/cart.js's getUpsellItems().
   return (
-    '<div class="menu-item" data-name="' + name + '" data-price="' + item.price + '">' +
+    '<div class="menu-item" data-name="' + name + '" data-price="' + item.price + '"' +
+      (item.upsellSuggested ? ' data-upsell="true"' : '') + '>' +
       '<div class="menu-item-main">' +
         '<div class="menu-item-name">' + escapeHtml(item.name) + '</div>' +
         '<div class="menu-item-price">R' + item.price + '</div>' +

@@ -79,60 +79,78 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     return cart.reduce(function (sum, i) { return sum + i.qty; }, 0);
   }
 
-  // Side items (name + price) are read straight from the rendered menu DOM
-  // (the "On The Side" category, id "on-the-side" — see seed-data.js)
-  // rather than a second Firestore fetch here: menu-loader.js already
-  // rendered them with data-name/data-price attributes, so this only needs
-  // to exist on menu.html (where the upsell is actually actionable) and
+  // Upsell items (name + price) are read straight from the rendered menu
+  // DOM rather than a second Firestore fetch here: menu-loader.js marks
+  // whichever items the admin has ticked "Suggest in cart" for (Menu Items
+  // editor) with a data-upsell="true" attribute, so this only needs to
+  // exist on menu.html (where the upsell is actually actionable) and
   // naturally does nothing on every other page, with zero new coupling
   // between the two modules.
-  function getSideItems() {
-    // Scoped to #menuMain specifically — the sidebar nav buttons also carry
-    // a matching data-category-id, and an unscoped selector would match one
-    // of those instead (no .menu-item children -> an empty result, which
-    // would make the upsell show even when a side IS in the cart).
-    var section = document.querySelector('#menuMain [data-category-id="on-the-side"]');
-    if (!section) return null;
-    return Array.from(section.querySelectorAll('.menu-item[data-name]')).map(function (el) {
+  //
+  // Falls back to the "On The Side" category (id "on-the-side" — see
+  // seed-data.js) when nothing has been explicitly marked yet, so the nudge
+  // still does something sensible out of the box before an admin configures
+  // it, matching this project's usual static-fallback-until-configured
+  // pattern.
+  function getUpsellItems() {
+    var main = document.getElementById('menuMain');
+    if (!main) return null; // not on the menu page — nothing to suggest
+
+    var marked = Array.from(main.querySelectorAll('.menu-item[data-upsell="true"]'));
+    var source = marked.length ? marked : Array.from(main.querySelectorAll('[data-category-id="on-the-side"] .menu-item[data-name]'));
+
+    return source.map(function (el) {
       return { name: el.dataset.name, price: parseInt(el.dataset.price, 10) };
     });
   }
 
-  function cartHasASide() {
-    var sides = getSideItems();
-    if (!sides) return true; // not on the menu page — nothing to suggest
-    var sideNames = sides.map(function (s) { return s.name; });
-    return cart.some(function (i) { return sideNames.indexOf(i.name) !== -1; });
+  function cartHasUpsellItem(items) {
+    var names = items.map(function (s) { return s.name; });
+    return cart.some(function (i) { return names.indexOf(i.name) !== -1; });
   }
 
   // The cart panel covers the entire screen on mobile, so a text-only nudge
   // gives no way to actually act on it without closing the panel, hunting
-  // down the sides section, and reopening the cart — real friction reported
-  // after the first version shipped. Quick-add buttons let it be added
-  // without leaving the panel. Capped at 4 so a long sides list doesn't
-  // overwhelm the footer.
+  // down the suggested item, and reopening the cart — real friction
+  // reported after the first version shipped. Quick-add buttons let it be
+  // added without leaving the panel.
+  //
+  // Stays visible even after one suggested item is already in the cart
+  // (just switches wording) rather than disappearing outright — a customer
+  // adding for multiple people may want more than one side, and the first
+  // version's hide-once-satisfied behavior was reported as the nudge
+  // "removing itself" from checkout. Only items not already in the cart are
+  // offered as buttons (capped at 4) so it doesn't invite adding
+  // duplicates of something already there.
   function renderUpsell() {
     var upsell = document.querySelector('.cart-upsell');
     if (!upsell) return;
 
-    if (!cart.length || cartHasASide()) {
+    var allItems = getUpsellItems();
+    if (!cart.length || !allItems || !allItems.length) {
       upsell.hidden = true;
       upsell.innerHTML = '';
       return;
     }
 
-    var sides = (getSideItems() || []).slice(0, 4);
-    if (!sides.length) {
+    var alreadyHasOne = cartHasUpsellItem(allItems);
+    var remaining = allItems.filter(function (s) {
+      return cart.every(function (i) { return i.name !== s.name; });
+    }).slice(0, 4);
+
+    if (!remaining.length) {
       upsell.hidden = true;
       upsell.innerHTML = '';
       return;
     }
+
+    var message = alreadyHasOne ? '🍟 Add another side?' : '🍟 Don\'t forget a side!';
 
     upsell.hidden = false;
     upsell.innerHTML = (
-      '<p class="cart-upsell-msg">🍟 Don\'t forget a side!</p>' +
+      '<p class="cart-upsell-msg">' + message + '</p>' +
       '<div class="cart-upsell-list">' +
-        sides.map(function (s) {
+        remaining.map(function (s) {
           var name = escapeAttr(s.name);
           return (
             '<button type="button" class="cart-upsell-add" data-name="' + name + '" data-price="' + s.price + '">' +
