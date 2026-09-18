@@ -1629,6 +1629,12 @@ section {
   display: none;
 }
 
+.cart-pickup-note {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
 .cart-total-row {
   display: flex;
   justify-content: space-between;

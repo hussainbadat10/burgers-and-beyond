@@ -787,6 +787,13 @@ var CONTENT_GROUPS = [
     ]
   },
   {
+    page: 'home',
+    title: 'Cart Panel (shown on every page)',
+    fields: [
+      { key: 'cartPrepTimeNote', label: 'Prep Time Note', type: 'textarea' }
+    ]
+  },
+  {
     page: 'menu',
     title: 'Hero',
     fields: [

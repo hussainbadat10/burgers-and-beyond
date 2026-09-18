@@ -188,7 +188,10 @@ export const SITE_CONTENT = {
   contactHeroSub: 'Call ahead to order, or drop by during opening hours for collection.',
 
   // Footer (shared across all pages)
-  footerTagline: 'Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.'
+  footerTagline: 'Smash burgers, gatsbys, kotas and flame-grilled everything — made fresh to order.',
+
+  // Cart panel (shared across all pages)
+  cartPrepTimeNote: '🕒 Please allow 20-30 minutes for your order to be prepared.'
 };
 
 // Home page "Fan Favourites" cards — own collection (not part of SITE_CONTENT)
