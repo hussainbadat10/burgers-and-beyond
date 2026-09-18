@@ -20,10 +20,13 @@
 
 {% include "partials/cookie-banner.njk" %}
 
+{% include "partials/install-banner.njk" %}
+
   <script src="js/script.js"></script>
 {% for s in scripts %}
   <script{% if s.module %} type="module"{% endif %} src="{{ s.src }}"></script>
 {% endfor %}
   <script src="js/analytics.js"></script>
+  <script src="js/install-prompt.js"></script>
 </body>
 </html>

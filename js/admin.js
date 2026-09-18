@@ -255,6 +255,7 @@ async function loadEverything() {
     await loadBrandingEditor();
     await loadContentEditorForPage('menuContentEditor', 'menu');
     await loadSpecialsEditor();
+    await loadComboEditor();
     await loadMenuEditor();
     await loadContentEditorForPage('aboutContentEditor', 'about');
     await loadValueCardEditor();
@@ -573,6 +574,168 @@ async function addItem(row) {
   } catch (err) {
     console.error(err);
     showToast('Could not add item — try again');
+  }
+}
+
+// ---------- Combo deals editor ----------
+// A flat collection (comboDeals), not grouped by category — same field
+// shape as a menu item (name/price/description/photo) plus an "active"
+// flag so a combo can be hidden from the live menu without deleting it.
+// menu-loader.js renders active combos as a pinned pseudo-category at the
+// top of the menu, reusing the ordinary .menu-item-add button so "Add"
+// works exactly like any other menu item.
+
+function renderComboRow(combo) {
+  var photo = combo.imageUrl
+    ? '<img src="' + escapeAttr(combo.imageUrl) + '" class="admin-item-photo" alt="">'
+    : '<div class="admin-item-photo"></div>';
+  var fileId = 'combo-photo-' + combo.id;
+  var nameId = 'combo-name-' + combo.id;
+  var descId = 'combo-desc-' + combo.id;
+  var priceId = 'combo-price-' + combo.id;
+  var activeId = 'combo-active-' + combo.id;
+
+  return (
+    '<div class="admin-item-row" data-combo-id="' + combo.id + '">' +
+      '<div>' +
+        photo +
+        '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-combo-photo" style="display:none">' +
+        '<label for="' + fileId + '" class="admin-file-label">Change photo</label>' +
+      '</div>' +
+      '<div class="admin-item-fields">' +
+        '<label class="sr-only" for="' + nameId + '">Combo name</label>' +
+        '<input type="text" id="' + nameId + '" data-field="name" value="' + escapeAttr(combo.name) + '" placeholder="e.g. Burger + Chips + Drink">' +
+        '<label class="sr-only" for="' + descId + '">Description</label>' +
+        '<textarea id="' + descId + '" data-field="description" placeholder="Description (optional)">' + escapeAttr(combo.description || '') + '</textarea>' +
+        '<label class="admin-combo-active" for="' + activeId + '">' +
+          '<input type="checkbox" id="' + activeId + '" data-field="active"' + (combo.active !== false ? ' checked' : '') + '> Show on menu' +
+        '</label>' +
+      '</div>' +
+      '<label class="sr-only" for="' + priceId + '">Price in Rand</label>' +
+      '<input type="number" id="' + priceId + '" data-field="price" value="' + combo.price + '" min="0" step="1">' +
+      '<div class="admin-item-actions">' +
+        '<button class="admin-btn admin-btn-primary" type="button" data-action="save-combo">Save</button>' +
+        '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-combo">Delete</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function renderAddComboRow() {
+  return (
+    '<div class="admin-add-item" data-combo-add-row>' +
+      '<label class="sr-only" for="add-combo-name">New combo name</label>' +
+      '<input type="text" id="add-combo-name" data-field="name" placeholder="e.g. Burger + Chips + Drink">' +
+      '<label class="sr-only" for="add-combo-price">New combo price in Rand</label>' +
+      '<input type="number" id="add-combo-price" data-field="price" placeholder="Price" min="0" step="1">' +
+      '<button class="admin-btn admin-btn-primary" type="button" data-action="add-combo">Add Combo</button>' +
+    '</div>'
+  );
+}
+
+async function loadComboEditor() {
+  var editor = document.getElementById('comboEditor');
+  if (!editor) return;
+
+  var snap = await getDocs(query(collection(db, 'comboDeals'), orderBy('order')));
+  var combos = [];
+  snap.forEach(function (d) { combos.push(Object.assign({ id: d.id }, d.data())); });
+
+  editor.innerHTML = (combos.length
+    ? combos.map(renderComboRow).join('')
+    : '<p class="admin-hint">No combo deals yet — add one below.</p>') + renderAddComboRow();
+
+  editor.querySelectorAll('[data-action="save-combo"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { saveCombo(btn.closest('.admin-item-row')); });
+  });
+  editor.querySelectorAll('[data-action="delete-combo"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { deleteCombo(btn.closest('.admin-item-row')); });
+  });
+  editor.querySelectorAll('[data-action="upload-combo-photo"]').forEach(function (input) {
+    input.addEventListener('change', function () { uploadComboPhoto(input); });
+  });
+  editor.querySelectorAll('[data-action="add-combo"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { addCombo(btn.closest('[data-combo-add-row]')); });
+  });
+}
+
+async function saveCombo(row) {
+  var id = row.dataset.comboId;
+  var name = row.querySelector('[data-field="name"]').value.trim();
+  var price = Number(row.querySelector('[data-field="price"]').value);
+  var description = row.querySelector('[data-field="description"]').value.trim();
+  var active = row.querySelector('[data-field="active"]').checked;
+
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    showToast('Enter a valid name and a price above R0 first');
+    return;
+  }
+
+  try {
+    await updateDoc(doc(db, 'comboDeals', id), { name: name, price: price, description: description, active: active });
+    showToast('Saved');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not save — try again');
+  }
+}
+
+async function deleteCombo(row) {
+  if (!confirm('Delete this combo permanently?')) return;
+  var id = row.dataset.comboId;
+  try {
+    await deleteDoc(doc(db, 'comboDeals', id));
+    row.remove();
+    showToast('Combo deleted');
+  } catch (err) {
+    console.error(err);
+    showToast('Could not delete — try again');
+  }
+}
+
+async function uploadComboPhoto(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var row = input.closest('.admin-item-row');
+  var id = row.dataset.comboId;
+
+  showToast('Uploading photo…');
+  try {
+    var url = await uploadPhotoToCloudinary(file);
+    await updateDoc(doc(db, 'comboDeals', id), { imageUrl: url });
+    swapAdminPhotoThumbnail(row.querySelector('.admin-item-photo'), url);
+    showToast('Photo updated');
+  } catch (err) {
+    console.error(err);
+    showToast('Photo upload failed — try again');
+  }
+}
+
+async function addCombo(addRowEl) {
+  var name = addRowEl.querySelector('[data-field="name"]').value.trim();
+  var price = Number(addRowEl.querySelector('[data-field="price"]').value);
+
+  if (!name || !Number.isFinite(price) || price <= 0) {
+    showToast('Enter a valid name and a price above R0 first');
+    return;
+  }
+
+  try {
+    var snap = await getDocs(collection(db, 'comboDeals'));
+    var maxOrder = 0;
+    snap.forEach(function (d) {
+      var order = d.data().order || 0;
+      if (order > maxOrder) maxOrder = order;
+    });
+
+    await addDoc(collection(db, 'comboDeals'), {
+      name: name, price: price, description: '', imageUrl: '', order: maxOrder + 1, active: true
+    });
+    showToast('Combo added');
+    loadComboEditor();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not add — try again');
   }
 }
 

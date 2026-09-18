@@ -14,6 +14,8 @@ var activeCategoryId = null;
 var suppressSpyUntil = 0;
 var tickingScroll = false;
 var searchActive = false;
+var noResultsTimer = null;
+var lastTrackedNoResultsQuery = '';
 
 function sectionId(categoryId) {
   return 'menu-cat-' + categoryId;
@@ -293,12 +295,90 @@ function applySearch(rawQuery) {
 
   emptyMsg.hidden = anyVisible;
   emptyMsg.textContent = anyVisible ? '' : 'No menu items match "' + rawQuery.trim() + '". Try a different search.';
+
+  // Tells the owner what customers search for but can't find on the menu.
+  // Debounced so a query that stays empty-result while still being typed
+  // (e.g. "chick" -> "chicke" -> "chicken") only logs once it settles, and
+  // de-duped against the last query actually sent so re-triggering
+  // applySearch with the same text (e.g. from an unrelated re-render) never
+  // double-logs.
+  if (noResultsTimer) clearTimeout(noResultsTimer);
+  if (!anyVisible) {
+    var trimmed = rawQuery.trim();
+    noResultsTimer = setTimeout(function () {
+      if (trimmed && trimmed !== lastTrackedNoResultsQuery && window.trackEvent) {
+        lastTrackedNoResultsQuery = trimmed;
+        window.trackEvent('menu_search_no_results', { search_term: trimmed });
+      }
+    }, 600);
+  } else {
+    lastTrackedNoResultsQuery = '';
+  }
 }
 
 function updateHeaderHeightVar() {
   var header = document.querySelector('.site-header');
   if (header) {
     document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+  }
+}
+
+// Menu/MenuItem structured data for the real menu, built and injected
+// client-side once Firestore data has actually loaded. Google's crawler
+// renders pages with full JS execution before reading structured data (this
+// is officially supported, unlike simple non-JS social-share crawlers), so
+// this reaches search results the same as build-time JSON-LD would — the
+// only way to get real prices/items into it at all, since the menu itself
+// lives in Firestore, not in the static build.
+function injectMenuJsonLd() {
+  var sections = categories
+    .map(function (cat) {
+      var items = itemsByCategory[cat.id] || [];
+      if (!items.length) return null;
+      return {
+        '@type': 'MenuSection',
+        name: cat.name,
+        hasMenuItem: items.map(function (item) {
+          var menuItem = { '@type': 'MenuItem', name: item.name };
+          if (item.description) menuItem.description = item.description;
+          menuItem.offers = { '@type': 'Offer', price: String(item.price), priceCurrency: 'ZAR' };
+          return menuItem;
+        })
+      };
+    })
+    .filter(Boolean);
+
+  if (!sections.length) return;
+
+  var data = {
+    '@context': 'https://schema.org',
+    '@type': 'Menu',
+    name: 'Burgers N Beyond Menu',
+    hasMenuSection: sections
+  };
+
+  var existing = document.getElementById('menu-jsonld');
+  if (existing) existing.remove();
+
+  var script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'menu-jsonld';
+  script.textContent = JSON.stringify(data);
+  document.head.appendChild(script);
+}
+
+async function loadComboDeals() {
+  try {
+    var snap = await getDocs(query(collection(db, 'comboDeals'), orderBy('order')));
+    var combos = [];
+    snap.forEach(function (d) {
+      var combo = Object.assign({ id: d.id }, d.data());
+      if (combo.active !== false) combos.push(combo);
+    });
+    return combos;
+  } catch (err) {
+    console.error('Failed to load combo deals from Firestore', err);
+    return [];
   }
 }
 
@@ -331,10 +411,12 @@ async function loadMenu() {
   try {
     var snaps = await Promise.all([
       getDocs(query(collection(db, 'menuCategories'), orderBy('order'))),
-      getDocs(query(collection(db, 'menuItems'), orderBy('order')))
+      getDocs(query(collection(db, 'menuItems'), orderBy('order'))),
+      loadComboDeals()
     ]);
     var catsSnap = snaps[0];
     var itemsSnap = snaps[1];
+    var combos = snaps[2];
 
     categories = [];
     catsSnap.forEach(function (doc) {
@@ -348,6 +430,17 @@ async function loadMenu() {
       itemsByCategory[item.categoryId].push(item);
     });
 
+    // Combo deals are a separate Firestore collection (admin-managed, see
+    // "Combo Deals" in the admin panel), but rendered as an ordinary
+    // pseudo-category pinned to the top of the menu — that gets scroll-spy,
+    // sidebar navigation, and search filtering for free, and "Add" behaves
+    // exactly like any other menu item (same .menu-item-add button, so it
+    // lands in the cart the same way).
+    if (combos.length) {
+      categories.unshift({ id: 'combo-deals', name: 'Combo Deals', emoji: '🎉', order: -1 });
+      itemsByCategory['combo-deals'] = combos;
+    }
+
     if (!categories.length) {
       main.removeAttribute('aria-busy');
       sidebar.removeAttribute('aria-busy');
@@ -359,6 +452,7 @@ async function loadMenu() {
     renderSidebar();
     renderMain();
     updateHeaderHeightVar();
+    injectMenuJsonLd();
     if (searchInput) searchInput.disabled = false;
 
     var initial = window.location.hash.replace('#', '');

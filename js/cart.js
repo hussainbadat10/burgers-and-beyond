@@ -79,6 +79,44 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     return cart.reduce(function (sum, i) { return sum + i.qty; }, 0);
   }
 
+  // Side items are read straight from the rendered menu DOM (the "On The
+  // Side" category, id "on-the-side" — see seed-data.js) rather than a
+  // second Firestore fetch here: menu-loader.js already rendered them with
+  // .menu-item-name text nodes, so this only needs to exist on menu.html
+  // (where the upsell is actually actionable) and naturally does nothing on
+  // every other page, with zero new coupling between the two modules.
+  function getSideItemNames() {
+    // Scoped to #menuMain specifically — the sidebar nav buttons also carry
+    // a matching data-category-id, and an unscoped selector would match one
+    // of those instead (no .menu-item-name children -> an empty result,
+    // which would make the upsell show even when a side IS in the cart).
+    var section = document.querySelector('#menuMain [data-category-id="on-the-side"]');
+    if (!section) return null;
+    return Array.from(section.querySelectorAll('.menu-item-name')).map(function (el) {
+      return el.textContent.trim();
+    });
+  }
+
+  function cartHasASide() {
+    var sideNames = getSideItemNames();
+    if (!sideNames) return true; // not on the menu page — nothing to suggest
+    return cart.some(function (i) { return sideNames.indexOf(i.name) !== -1; });
+  }
+
+  // Pickup time is read fresh from the cart panel UI right before building
+  // the WhatsApp message rather than persisted alongside the cart itself —
+  // it's a "how do you want this order" choice made at send-time, not part
+  // of what's actually in the order, so it resets to ASAP on every visit
+  // like a delivery-time picker would.
+  function getPickupTimeText() {
+    var scheduled = document.querySelector('input[name="pickupTiming"][value="scheduled"]');
+    if (scheduled && scheduled.checked) {
+      var timeInput = document.querySelector('.cart-pickup-time-input');
+      if (timeInput && timeInput.value) return 'At ' + timeInput.value;
+    }
+    return 'ASAP';
+  }
+
   function buildOrderText() {
     if (!cart.length) return '';
     var lines = cart.map(function (i) {
@@ -88,6 +126,7 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
       "Hi Burgers N Beyond! I'd like to place an order:\n\n" +
       lines.join('\n') +
       '\n\nTotal: R' + total() +
+      '\nPickup: ' + getPickupTimeText() +
       '\n\nEFT confirms order! Please send banking details.' +
       '\nIf payment does not reflect, the order will not be processed.' +
       '\n\n(Sent via the website order form)'
@@ -138,6 +177,9 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
 
     var totalValue = document.querySelector('.cart-total-value');
     if (totalValue) totalValue.textContent = 'R' + total();
+
+    var upsell = document.querySelector('.cart-upsell');
+    if (upsell) upsell.hidden = cartHasASide();
   }
 
   function openPanel() {
@@ -154,8 +196,23 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     if (backdrop) backdrop.classList.remove('open');
   }
 
+  function resetPickupTimeUi() {
+    var asap = document.querySelector('input[name="pickupTiming"][value="asap"]');
+    var timeInput = document.querySelector('.cart-pickup-time-input');
+    if (asap) asap.checked = true;
+    if (timeInput) timeInput.hidden = true;
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     render();
+    resetPickupTimeUi();
+
+    document.addEventListener('change', function (e) {
+      if (e.target.name === 'pickupTiming') {
+        var timeInput = document.querySelector('.cart-pickup-time-input');
+        if (timeInput) timeInput.hidden = e.target.value !== 'scheduled';
+      }
+    });
 
     // Add-to-order buttons (menu page only)
     document.addEventListener('click', function (e) {
@@ -215,6 +272,7 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
         window.open(url, '_blank', 'noopener');
         clearCart();
         closePanel();
+        resetPickupTimeUi();
       }
     });
   });

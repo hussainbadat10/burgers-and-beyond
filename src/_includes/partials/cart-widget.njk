@@ -16,10 +16,21 @@
       <p class="cart-empty">Your order is empty — add something from the menu.</p>
     </div>
     <div class="cart-panel-footer" hidden>
+      <p class="cart-upsell" hidden>🍟 Don't forget a side!</p>
       <div class="cart-total-row">
         <span class="cart-total-label">Total</span>
         <span class="cart-total-value">R0</span>
       </div>
+      <fieldset class="cart-pickup">
+        <legend>Pickup time</legend>
+        <label class="cart-pickup-option">
+          <input type="radio" name="pickupTiming" value="asap" checked> ASAP
+        </label>
+        <label class="cart-pickup-option">
+          <input type="radio" name="pickupTiming" value="scheduled"> At a specific time
+        </label>
+        <input type="time" class="cart-pickup-time-input" aria-label="Pickup time" hidden>
+      </fieldset>
       <p class="cart-eft-note">⚠️ EFT confirms order!</p>
       <div class="cart-order-actions">
         <a href="#" class="btn btn-primary cart-order-whatsapp" data-phone="27825140077" data-content-phone-key="phone1Wa">Order via WhatsApp — <span data-content-key="phone1Text">082 514 0077</span></a>
