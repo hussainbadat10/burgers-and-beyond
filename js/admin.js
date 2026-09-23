@@ -75,6 +75,59 @@ function showToast(msg) {
   setTimeout(function () { toast.classList.remove('show'); }, 2200);
 }
 
+// ---------- Reordering (Menu Items, Combo Deals, Daily Specials) ----------
+// Every reorderable list here is rendered in Firestore query order (orderBy
+// 'order'), so DOM order already matches list order — no need to track
+// indices separately. Moving a row just means swapping its `order` field
+// with whichever real .admin-item-row sibling sits in that direction,
+// skipping over non-row siblings (a category header, an add-row) rather
+// than assuming the immediate DOM sibling is always another item.
+
+function findSiblingItemRow(row, direction) {
+  var sibling = direction === 'up' ? row.previousElementSibling : row.nextElementSibling;
+  while (sibling && !sibling.classList.contains('admin-item-row')) {
+    sibling = direction === 'up' ? sibling.previousElementSibling : sibling.nextElementSibling;
+  }
+  return sibling;
+}
+
+// Run once after any reorderable list renders, so the top item's "move up"
+// and the bottom item's "move down" are disabled rather than silently
+// doing nothing when clicked.
+function updateMoveButtonStates(scopeEl) {
+  scopeEl.querySelectorAll('.admin-item-row').forEach(function (row) {
+    var upBtn = row.querySelector('[data-action="move-up"]');
+    var downBtn = row.querySelector('[data-action="move-down"]');
+    if (upBtn) upBtn.disabled = !findSiblingItemRow(row, 'up');
+    if (downBtn) downBtn.disabled = !findSiblingItemRow(row, 'down');
+  });
+}
+
+function renderMoveButtons() {
+  return (
+    '<div class="admin-move-buttons">' +
+      '<button class="admin-btn admin-btn-ghost admin-move-btn" type="button" data-action="move-up" aria-label="Move up">&uarr;</button>' +
+      '<button class="admin-btn admin-btn-ghost admin-move-btn" type="button" data-action="move-down" aria-label="Move down">&darr;</button>' +
+    '</div>'
+  );
+}
+
+// Swaps the `order` field between two docs in one atomic batch (so a
+// failure never leaves the list in a half-swapped, inconsistently-ordered
+// state), then reloads the editor to reflect the new order.
+async function swapOrderAndReload(docA, orderA, docB, orderB, reloadFn) {
+  try {
+    var batch = writeBatch(db);
+    batch.update(docA, { order: orderB });
+    batch.update(docB, { order: orderA });
+    await batch.commit();
+    await reloadFn();
+  } catch (err) {
+    console.error(err);
+    showToast('Could not reorder — try again');
+  }
+}
+
 // ---------- Auth ----------
 
 loginForm.addEventListener('submit', function (e) {
@@ -329,6 +382,23 @@ async function loadMenuEditor() {
   editor.querySelectorAll('[data-action="add-category"]').forEach(function (btn) {
     btn.addEventListener('click', function () { addCategory(btn.closest('.admin-add-category')); });
   });
+  editor.querySelectorAll('[data-action="move-up"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveMenuItem(btn.closest('.admin-item-row'), 'up'); });
+  });
+  editor.querySelectorAll('[data-action="move-down"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveMenuItem(btn.closest('.admin-item-row'), 'down'); });
+  });
+  updateMoveButtonStates(editor);
+}
+
+async function moveMenuItem(row, direction) {
+  var sibling = findSiblingItemRow(row, direction);
+  if (!sibling) return;
+  await swapOrderAndReload(
+    doc(db, 'menuItems', row.dataset.itemId), Number(row.dataset.order),
+    doc(db, 'menuItems', sibling.dataset.itemId), Number(sibling.dataset.order),
+    loadMenuEditor
+  );
 }
 
 function renderCategoryHeader(cat) {
@@ -377,7 +447,7 @@ function renderItemRow(item) {
   var upsellId = 'item-upsell-' + item.id;
 
   return (
-    '<div class="admin-item-row" data-item-id="' + item.id + '">' +
+    '<div class="admin-item-row" data-item-id="' + item.id + '" data-order="' + (item.order || 0) + '">' +
       '<div>' +
         photo +
         '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-photo" style="display:none">' +
@@ -395,6 +465,7 @@ function renderItemRow(item) {
       '<label class="sr-only" for="' + priceId + '">Price in Rand</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" value="' + item.price + '" min="0" step="1">' +
       '<div class="admin-item-actions">' +
+        renderMoveButtons() +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
       '</div>' +
@@ -601,7 +672,7 @@ function renderComboRow(combo) {
   var activeId = 'combo-active-' + combo.id;
 
   return (
-    '<div class="admin-item-row" data-combo-id="' + combo.id + '">' +
+    '<div class="admin-item-row" data-combo-id="' + combo.id + '" data-order="' + (combo.order || 0) + '">' +
       '<div>' +
         photo +
         '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-combo-photo" style="display:none">' +
@@ -619,6 +690,7 @@ function renderComboRow(combo) {
       '<label class="sr-only" for="' + priceId + '">Price in Rand</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" value="' + combo.price + '" min="0" step="1">' +
       '<div class="admin-item-actions">' +
+        renderMoveButtons() +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-combo">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-combo">Delete</button>' +
       '</div>' +
@@ -662,6 +734,23 @@ async function loadComboEditor() {
   editor.querySelectorAll('[data-action="add-combo"]').forEach(function (btn) {
     btn.addEventListener('click', function () { addCombo(btn.closest('[data-combo-add-row]')); });
   });
+  editor.querySelectorAll('[data-action="move-up"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveCombo(btn.closest('.admin-item-row'), 'up'); });
+  });
+  editor.querySelectorAll('[data-action="move-down"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveCombo(btn.closest('.admin-item-row'), 'down'); });
+  });
+  updateMoveButtonStates(editor);
+}
+
+async function moveCombo(row, direction) {
+  var sibling = findSiblingItemRow(row, direction);
+  if (!sibling) return;
+  await swapOrderAndReload(
+    doc(db, 'comboDeals', row.dataset.comboId), Number(row.dataset.order),
+    doc(db, 'comboDeals', sibling.dataset.comboId), Number(sibling.dataset.order),
+    loadComboEditor
+  );
 }
 
 async function saveCombo(row) {
@@ -1218,7 +1307,7 @@ function renderSpecialRow(day, special) {
   var priceId = 'special-price-' + day + '-' + special.id;
 
   return (
-    '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr 110px auto;" data-day="' + day + '" data-item-id="' + special.id + '">' +
+    '<div class="admin-item-row" style="grid-template-columns: 56px 1fr 1fr 110px auto;" data-day="' + day + '" data-item-id="' + special.id + '" data-order="' + (special.order || 0) + '">' +
       '<div>' +
         photo +
         '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-special-photo" style="display:none">' +
@@ -1231,6 +1320,7 @@ function renderSpecialRow(day, special) {
       '<label class="sr-only" for="' + priceId + '">Special price in Rand</label>' +
       '<input type="number" id="' + priceId + '" data-field="price" value="' + (special.price || '') + '" placeholder="Price (R)" min="0" step="1">' +
       '<div class="admin-item-actions">' +
+        renderMoveButtons() +
         '<button class="admin-btn admin-btn-primary" type="button" data-action="save-special">Save</button>' +
         '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-special">Delete</button>' +
       '</div>' +
@@ -1286,6 +1376,24 @@ async function loadSpecialsEditor() {
   editor.querySelectorAll('[data-action="add-special"]').forEach(function (btn) {
     btn.addEventListener('click', function () { addSpecial(btn.closest('.admin-add-item')); });
   });
+  editor.querySelectorAll('[data-action="move-up"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveSpecial(btn.closest('.admin-item-row'), 'up'); });
+  });
+  editor.querySelectorAll('[data-action="move-down"]').forEach(function (btn) {
+    btn.addEventListener('click', function () { moveSpecial(btn.closest('.admin-item-row'), 'down'); });
+  });
+  updateMoveButtonStates(editor);
+}
+
+async function moveSpecial(row, direction) {
+  var sibling = findSiblingItemRow(row, direction);
+  if (!sibling) return;
+  var day = row.dataset.day;
+  await swapOrderAndReload(
+    doc(db, 'dailySpecials', day, 'items', row.dataset.itemId), Number(row.dataset.order),
+    doc(db, 'dailySpecials', day, 'items', sibling.dataset.itemId), Number(sibling.dataset.order),
+    loadSpecialsEditor
+  );
 }
 
 async function saveSpecial(row) {

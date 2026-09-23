@@ -1011,6 +1011,17 @@ section {
   margin-left: auto;
 }
 
+/* .menu-item-add is styled to float in a card's top-right corner via
+   position:absolute (see .menu-item, its normal home, which is
+   position:relative) — reused here for specials with a price, but
+   .promo-card is never position:relative, so without this override the
+   button escapes to the page's root and floats near the very top of the
+   whole document instead of sitting next to the price. Overridden back to
+   a normal flex item, matching .promo-card-order's actual inline layout. */
+.promo-card-order .menu-item-add {
+  position: static;
+}
+
 .promo-price {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -1926,6 +1937,28 @@ section {
   flex-direction: column;
   gap: 8px;
   align-items: stretch;
+}
+
+.admin-move-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.admin-move-btn {
+  flex: 1;
+  padding: 6px 0;
+  text-align: center;
+  line-height: 1;
+}
+
+.admin-move-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.admin-move-btn:disabled:hover {
+  border-color: var(--color-bg-alt);
+  color: var(--color-text-muted);
 }
 
 .admin-btn {
