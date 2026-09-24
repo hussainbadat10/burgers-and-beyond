@@ -1087,6 +1087,23 @@ function makeCardCollectionEditor(collectionName, editorElId) {
     editor.querySelectorAll('[data-action="add-item"]').forEach(function (btn) {
       btn.addEventListener('click', function () { addRow(btn.closest('.admin-add-item')); });
     });
+    editor.querySelectorAll('[data-action="move-up"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { moveRow(btn.closest('.admin-item-row'), 'up'); });
+    });
+    editor.querySelectorAll('[data-action="move-down"]').forEach(function (btn) {
+      btn.addEventListener('click', function () { moveRow(btn.closest('.admin-item-row'), 'down'); });
+    });
+    updateMoveButtonStates(editor);
+  }
+
+  async function moveRow(row, direction) {
+    var sibling = findSiblingItemRow(row, direction);
+    if (!sibling) return;
+    await swapOrderAndReload(
+      doc(db, collectionName, row.dataset.itemId), Number(row.dataset.order),
+      doc(db, collectionName, sibling.dataset.itemId), Number(sibling.dataset.order),
+      load
+    );
   }
 
   function renderRow(card) {
@@ -1099,7 +1116,7 @@ function makeCardCollectionEditor(collectionName, editorElId) {
     var descId = collectionName + '-desc-' + card.id;
 
     return (
-      '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 2fr auto;" data-item-id="' + card.id + '">' +
+      '<div class="admin-item-row" style="grid-template-columns: 56px 90px 1fr 2fr auto;" data-item-id="' + card.id + '" data-order="' + (card.order || 0) + '">' +
         '<div>' +
           photo +
           '<input type="file" id="' + fileId + '" accept="image/*" data-action="upload-photo" style="display:none">' +
@@ -1112,6 +1129,7 @@ function makeCardCollectionEditor(collectionName, editorElId) {
         '<label class="sr-only" for="' + descId + '">Card description</label>' +
         '<textarea id="' + descId + '" data-field="desc" placeholder="Description">' + escapeAttr(card.desc || '') + '</textarea>' +
         '<div class="admin-item-actions">' +
+          renderMoveButtons() +
           '<button class="admin-btn admin-btn-primary" type="button" data-action="save-item">Save</button>' +
           '<button class="admin-btn admin-btn-danger" type="button" data-action="delete-item">Delete</button>' +
         '</div>' +
