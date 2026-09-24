@@ -34,12 +34,13 @@
 // string reads as falsy. That distinction (key missing vs. key present but
 // empty) is exactly what this always checks via `key in content`.
 //
-// Two containers get card-collection rendering instead of simple text
+// Three containers get card-collection rendering instead of simple text
 // substitution, since the admin panel needs to add/remove cards, not just
 // edit a fixed set: #fanFavGrid (home page) from the fanFavourites
-// collection, #valueCardsWrap (about page) from valueCards. Same
-// fallback philosophy applies — if the collection is empty (e.g. before
-// the one-time migration from the old fixed fields has run), the page's
+// collection, #valueCardsWrap (about page) from valueCards, #reviewsGrid
+// (home page) from reviews. Same fallback philosophy applies — if the
+// collection is empty (e.g. before the one-time migration from the old
+// fixed fields has run, or before any reviews have been added yet), the page's
 // existing static cards are left exactly as they are.
 import { db } from './firebase-config.js';
 import {
@@ -82,6 +83,7 @@ async function renderCardCollection(containerId, collectionName) {
 document.addEventListener('DOMContentLoaded', async function () {
   renderCardCollection('fanFavGrid', 'fanFavourites');
   renderCardCollection('valueCardsWrap', 'valueCards');
+  renderCardCollection('reviewsGrid', 'reviews');
 
   var hasWork = document.querySelector('[data-content-key], [data-content-href-key], [data-content-phone-key], [data-content-src-key], [data-content-map]');
   if (!hasWork) return;

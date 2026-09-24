@@ -305,6 +305,7 @@ async function loadEverything() {
     await migrateDailySpecialsIfNeeded();
     await loadContentEditorForPage('homeContentEditor', 'home');
     await loadFanFavEditor();
+    await loadReviewsEditor();
     await loadBrandingEditor();
     await loadContentEditorForPage('menuContentEditor', 'menu');
     await loadSpecialsEditor();
@@ -1233,9 +1234,14 @@ function makeCardCollectionEditor(collectionName, editorElId) {
 
 var fanFavEditor = makeCardCollectionEditor('fanFavourites', 'fanFavEditor');
 var valueCardEditor = makeCardCollectionEditor('valueCards', 'valueCardsEditor');
+// Reviews reuse the same {emoji, title, desc, imageUrl} card shape as Fan
+// Favourites/Value Cards — emoji holds a star rating (e.g. "⭐⭐⭐⭐⭐"), title
+// the reviewer's name, desc the review text, imageUrl an optional photo.
+var reviewsEditor = makeCardCollectionEditor('reviews', 'reviewsEditor');
 
 function loadFanFavEditor() { return fanFavEditor.load(); }
 function loadValueCardEditor() { return valueCardEditor.load(); }
+function loadReviewsEditor() { return reviewsEditor.load(); }
 
 // ---------- Business info editor ----------
 

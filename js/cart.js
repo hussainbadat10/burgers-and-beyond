@@ -46,6 +46,20 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     }
     saveCart(cart);
     render();
+
+    // Standard GA4 ecommerce event, fired on every add regardless of
+    // source (menu item, combo, special, cart upsell quick-add — they all
+    // funnel through here). Previously the only cart-related event was
+    // order_via_whatsapp at final checkout, so there was no way to see
+    // where people dropped off between adding something and actually
+    // sending the order.
+    if (window.trackEvent) {
+      window.trackEvent('add_to_cart', {
+        currency: 'ZAR',
+        value: price,
+        items: [{ item_name: name, price: price, quantity: 1 }]
+      });
+    }
   }
 
   function changeQty(name, delta) {
