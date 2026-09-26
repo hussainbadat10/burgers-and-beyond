@@ -64,25 +64,89 @@ function renderCard(card) {
   );
 }
 
+// Returns the raw card data on success (so a caller — reviews' JSON-LD
+// injection below — can use it too), or null if the collection is still
+// empty (static fallback cards left as-is) or the fetch failed.
 async function renderCardCollection(containerId, collectionName) {
   var container = document.getElementById(containerId);
-  if (!container) return;
+  if (!container) return null;
 
   try {
     var snap = await getDocs(query(collection(db, collectionName), orderBy('order')));
-    if (snap.empty) return; // leave the existing static fallback cards as-is
+    if (snap.empty) return null;
 
-    var html = '';
-    snap.forEach(function (d) { html += renderCard(d.data()); });
-    container.innerHTML = html;
+    var cards = [];
+    snap.forEach(function (d) { cards.push(d.data()); });
+    container.innerHTML = cards.map(renderCard).join('');
+    return cards;
   } catch (err) {
     console.error('Failed to load ' + collectionName, err);
+    return null;
   }
+}
+
+// Counts literal star-emoji characters in the review card's "emoji" field
+// (e.g. "⭐⭐⭐⭐⭐" -> 5) rather than assuming every review is 5 stars —
+// returns null if the field doesn't actually contain a star rating, so a
+// review missing one is left out of the schema rather than a fabricated
+// rating being invented for it.
+function starCountFromEmoji(emoji) {
+  var stars = (emoji || '').match(/⭐/g);
+  return stars ? stars.length : null;
+}
+
+// Review/AggregateRating structured data — deliberately only ever built
+// from real reviews fetched from Firestore (the `reviews` param here is
+// exactly what renderCardCollection returned, which is null/never called
+// for the 3 static placeholder cards in index.njk). Google prohibits
+// self-authored/fabricated review markup, so this must never run against
+// invented content — only genuine reviews an admin has actually entered
+// should ever reach this collection at all.
+function injectReviewsJsonLd(reviews) {
+  var rated = reviews
+    .map(function (r) { return { name: r.title, text: r.desc, stars: starCountFromEmoji(r.emoji) }; })
+    .filter(function (r) { return r.name && r.text && r.stars; });
+
+  if (!rated.length) return;
+
+  var avgStars = rated.reduce(function (sum, r) { return sum + r.stars; }, 0) / rated.length;
+
+  var data = {
+    '@context': 'https://schema.org',
+    '@type': 'Restaurant',
+    '@id': 'https://hussainbadat10.github.io/burgers-and-beyond/index.html#restaurant',
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: Math.round(avgStars * 10) / 10,
+      reviewCount: rated.length,
+      bestRating: 5
+    },
+    review: rated.map(function (r) {
+      return {
+        '@type': 'Review',
+        author: { '@type': 'Person', name: r.name },
+        reviewBody: r.text,
+        reviewRating: { '@type': 'Rating', ratingValue: r.stars, bestRating: 5 }
+      };
+    })
+  };
+
+  var existing = document.getElementById('reviews-jsonld');
+  if (existing) existing.remove();
+
+  var script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.id = 'reviews-jsonld';
+  script.textContent = JSON.stringify(data);
+  document.head.appendChild(script);
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
   renderCardCollection('fanFavGrid', 'fanFavourites');
   renderCardCollection('valueCardsWrap', 'valueCards');
+  renderCardCollection('reviewsGrid', 'reviews').then(function (reviews) {
+    if (reviews && reviews.length) injectReviewsJsonLd(reviews);
+  });
   renderCardCollection('reviewsGrid', 'reviews');
 
   var hasWork = document.querySelector('[data-content-key], [data-content-href-key], [data-content-phone-key], [data-content-src-key], [data-content-map]');

@@ -62,11 +62,24 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
     }
   }
 
+  function trackRemove(item) {
+    if (!window.trackEvent || !item) return;
+    window.trackEvent('remove_from_cart', {
+      currency: 'ZAR',
+      value: item.price * item.qty,
+      items: [{ item_name: item.name, price: item.price, quantity: item.qty }]
+    });
+  }
+
   function changeQty(name, delta) {
     var item = findItem(name);
     if (!item) return;
     item.qty += delta;
     if (item.qty <= 0) {
+      // item.qty is already <=0 at this point — report the quantity that
+      // was actually there right before this decrement removed it, not
+      // the post-decrement value.
+      trackRemove({ name: item.name, price: item.price, qty: item.qty - delta });
       cart = cart.filter(function (i) { return i.name !== name; });
     }
     saveCart(cart);
@@ -74,7 +87,9 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
   }
 
   function removeItem(name) {
+    var item = findItem(name);
     cart = cart.filter(function (i) { return i.name !== name; });
+    trackRemove(item);
     saveCart(cart);
     render();
   }
@@ -293,6 +308,19 @@ import { escapeHtml, escapeAttr } from './escape-utils.js';
       if (closeBtn) closeBtn.focus();
     }
     if (backdrop) backdrop.classList.add('open');
+
+    // Fills the gap between add_to_cart and the final order_via_whatsapp —
+    // without this, someone who adds items and then never opens the cart
+    // again looks identical in GA4 to someone who opens it, reviews their
+    // order, and abandons before sending. Only fires with something
+    // actually in the cart; opening an empty cart isn't a checkout intent.
+    if (window.trackEvent && cart.length) {
+      window.trackEvent('begin_checkout', {
+        currency: 'ZAR',
+        value: total(),
+        items: cart.map(function (i) { return { item_name: i.name, price: i.price, quantity: i.qty }; })
+      });
+    }
   }
 
   function closePanel() {
